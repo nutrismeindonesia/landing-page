@@ -2,7 +2,7 @@
    The order form sends a simple cross-origin POST to Google Apps Script.
    Do not use application/json together with mode: "no-cors" here. */
 
-const NUTRISME_BUILD = "2026-07-17-2";
+const NUTRISME_BUILD = "2026-07-17-3";
 console.info(`[Nutrisme] build ${NUTRISME_BUILD}`);
 
 document.addEventListener("DOMContentLoaded", () => {
