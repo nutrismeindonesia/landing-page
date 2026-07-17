@@ -1,6 +1,6 @@
-/* Nutrisme Landing Page
-   Front-end preview only. The order form validates all required fields but does
-   not send data to an external service until an endpoint/channel is configured. */
+/* Nutrisme landing page.
+   The order form sends a simple cross-origin POST to Google Apps Script.
+   Do not use application/json together with mode: "no-cors" here. */
 
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
@@ -123,6 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const address = document.getElementById("address");
   const phone = document.getElementById("phone");
   const consent = document.getElementById("consent");
+  const websiteTrap = document.getElementById("website");
 
   let lastFocusedElement = null;
 
@@ -175,14 +176,21 @@ document.addEventListener("DOMContentLoaded", () => {
     policyToggle.setAttribute("aria-expanded", String(willOpen));
   });
 
+  const normalizePhone = (value) => {
+    let digits = String(value || "").replace(/\D/g, "");
+    if (digits.startsWith("62")) digits = digits.slice(2);
+    if (digits.startsWith("0")) digits = digits.slice(1);
+    return digits.slice(0, 15);
+  };
+
   phone.addEventListener("input", () => {
-    phone.value = phone.value.replace(/\D/g, "").slice(0, 15);
+    phone.value = normalizePhone(phone.value);
   });
 
   const validators = {
     fullName: () => fullName.value.trim().length >= 3,
     address: () => address.value.trim().length >= 10,
-    phone: () => /^\d{8,15}$/.test(phone.value),
+    phone: () => /^8\d{7,14}$/.test(normalizePhone(phone.value)),
     consent: () => consent.checked
   };
 
@@ -215,7 +223,9 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     submitOrder.disabled = !Object.values(validity).every(Boolean);
-    formStatus.textContent = submitOrder.disabled ? "Lengkapi seluruh field dan centang persetujuan untuk mengaktifkan Submit." : "Semua data sudah lengkap. Silakan tekan Submit.";
+    formStatus.textContent = submitOrder.disabled
+      ? "Lengkapi seluruh field dan centang persetujuan untuk mengaktifkan Submit."
+      : "Semua data sudah lengkap. Silakan tekan Submit.";
     formStatus.style.color = submitOrder.disabled ? "#8b5c4d" : "#167a4d";
   };
 
@@ -230,8 +240,36 @@ document.addEventListener("DOMContentLoaded", () => {
   consent.addEventListener("change", updateSubmitState);
   updateSubmitState();
 
-  // ─── Ganti URL ini dengan Web App URL dari Apps Script kamu ───
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdVC6gk2-e2s6htjQPtMd8iX4fTWzCqdZEb2jO0BYKmoYZRA6xB-9ObyEGsqsl51w/exec";
+  // Keep the /exec URL. If Apps Script creates a new deployment URL, replace it here.
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN0ZfvGFX1RPp8pFj4Afxk1Q3JECumWYuaZYel8PY-Fc4OvleOvyzHSq_Ljr1sx69X/exec";
+  const SUBMIT_TIMEOUT_MS = 20000;
+
+  const createRequestId = () => {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return window.crypto.randomUUID();
+    }
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  };
+
+  const sendOrder = async (payload) => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
+
+    try {
+      // URLSearchParams creates application/x-www-form-urlencoded, which is safe
+      // for a simple no-cors POST and is read by Apps Script through e.parameter.
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        cache: "no-store",
+        redirect: "follow",
+        body: new URLSearchParams(payload),
+        signal: controller.signal
+      });
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  };
 
   orderForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -248,35 +286,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!isValid) {
       formStatus.textContent = "Periksa kembali data yang belum valid.";
+      formStatus.style.color = "#b44729";
       const firstInvalid = [fullName, address, phone, consent].find((element) => !element.checkValidity());
       if (firstInvalid) firstInvalid.focus();
       return;
     }
 
-    // Nonaktifkan tombol submit saat proses pengiriman berlangsung
     submitOrder.disabled = true;
+    submitOrder.setAttribute("aria-busy", "true");
     formStatus.textContent = "Mengirim data...";
     formStatus.style.color = "#167a4d";
 
     try {
-      // Kirim data ke Google Apps Script
-      await fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors", // diperlukan karena Apps Script tidak mendukung CORS penuh
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nama: fullName.value.trim(),
-          alamat: address.value.trim(),
-          telepon: phone.value.trim(),
-          waktu: new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
-        })
+      await sendOrder({
+        action: "createOrder",
+        requestId: createRequestId(),
+        nama: fullName.value.trim(),
+        alamat: address.value.trim(),
+        telepon: normalizePhone(phone.value),
+        consent: consent.checked ? "yes" : "no",
+        source: window.location.href,
+        waktuKlien: new Date().toISOString(),
+        website: websiteTrap ? websiteTrap.value.trim() : ""
       });
     } catch (error) {
-      // Log error untuk debugging, tapi tetap lanjutkan ke halaman sukses
-      console.error("Gagal mengirim data ke spreadsheet:", error);
+      console.error("Gagal mengirim data ke Google Apps Script:", error);
+      submitOrder.removeAttribute("aria-busy");
+      submitOrder.disabled = false;
+      formStatus.textContent = error && error.name === "AbortError"
+        ? "Pengiriman terlalu lama. Periksa koneksi internet lalu coba lagi."
+        : "Data belum berhasil dikirim. Periksa koneksi internet lalu coba lagi.";
+      formStatus.style.color = "#b44729";
+      return;
     }
 
-    // Tampilkan halaman sukses
+    submitOrder.removeAttribute("aria-busy");
+    formStatus.textContent = "";
     orderFormView.hidden = true;
     orderSuccess.hidden = false;
     modalDialog.scrollTop = 0;
@@ -289,6 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
     policyToggle.setAttribute("aria-expanded", "false");
     orderSuccess.hidden = true;
     orderFormView.hidden = false;
+    submitOrder.removeAttribute("aria-busy");
     updateSubmitState();
     fullName.focus();
   });

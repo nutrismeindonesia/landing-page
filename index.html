@@ -7,7 +7,7 @@
   <meta name="description" content="Nutrisme menghadirkan meal prep sehat dengan nutrisi terukur, pilihan fleksibel, dan format yang praktis untuk rutinitas harian." />
   <title>Nutrisme — Meal Prep Sehat & Nutrisi Terukur</title>
   <link rel="icon" type="image/png" href="assets/nutrisme-mark.png" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260717-1" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
@@ -481,6 +481,11 @@
             <small class="field-message" id="phoneHint" aria-live="polite">Hanya angka, 8–15 digit.</small>
           </div>
 
+          <div class="form-field form-field--trap" aria-hidden="true">
+            <label for="website">Website</label>
+            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+
           <div class="consent-field" data-field="consent">
             <input id="consent" name="consent" type="checkbox" required />
             <label for="consent">
@@ -490,7 +495,7 @@
           </div>
 
           <div class="policy-note" id="policyNote" hidden>
-            Data yang diisi digunakan untuk menindaklanjuti permintaan pemesanan. Pada preview ini, data belum dikirim ke server atau kanal eksternal.
+            Data yang diisi digunakan untuk menindaklanjuti pemesanan dan dikirim ke sistem Nutrisme setelah tombol Submit ditekan.
           </div>
 
           <button class="button button--primary submit-button" id="submitOrder" type="submit" disabled>Submit</button>
@@ -502,14 +507,14 @@
         <span class="order-success__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg>
         </span>
-        <span class="section-kicker">Pesanan Diterima</span>
+        <span class="section-kicker">Permintaan Terkirim</span>
         <h2>Terima kasih!</h2>
-        <p>Pesananmu sudah kami terima. Tim Nutrisme akan segera menghubungimu untuk konfirmasi lebih lanjut. Sampai jumpa! 🌿</p>
+        <p>Data pemesananmu sudah dikirim. Tim Nutrisme akan menghubungimu untuk konfirmasi lebih lanjut.</p>
         <button class="button button--primary" type="button" id="resetOrder">Pesan Lagi</button>
       </div>
     </section>
   </div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=20260717-1"></script>
 </body>
 </html>
