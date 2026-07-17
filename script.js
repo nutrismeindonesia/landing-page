@@ -2,7 +2,7 @@
    The order form sends a simple cross-origin POST to Google Apps Script.
    Do not use application/json together with mode: "no-cors" here. */
 
-const NUTRISME_BUILD = "2026-07-17-3";
+const NUTRISME_BUILD = "2026-07-17-4";
 console.info(`[Nutrisme] build ${NUTRISME_BUILD}`);
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -130,7 +130,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let lastFocusedElement = null;
 
+  const resetOrderForm = ({ focus = false } = {}) => {
+    orderForm.reset();
+    Object.values(fields).forEach((field) => field.classList.remove("is-valid", "is-invalid"));
+    policyNote.hidden = true;
+    policyToggle.setAttribute("aria-expanded", "false");
+    orderSuccess.hidden = true;
+    orderFormView.hidden = false;
+    submitOrder.removeAttribute("aria-busy");
+    modalDialog.scrollTop = 0;
+    updateSubmitState();
+
+    if (focus && modal.classList.contains("is-open")) {
+      window.setTimeout(() => fullName.focus(), 0);
+    }
+  };
+
   const openOrderModal = () => {
+    // A completed order must not leave the modal stuck on the success view.
+    // Preserve partially filled forms, but start fresh after a successful submit.
+    if (!orderSuccess.hidden) resetOrderForm();
+
     lastFocusedElement = document.activeElement;
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
@@ -332,14 +352,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   resetOrder.addEventListener("click", () => {
-    orderForm.reset();
-    Object.values(fields).forEach((field) => field.classList.remove("is-valid", "is-invalid"));
-    policyNote.hidden = true;
-    policyToggle.setAttribute("aria-expanded", "false");
-    orderSuccess.hidden = true;
-    orderFormView.hidden = false;
-    submitOrder.removeAttribute("aria-busy");
-    updateSubmitState();
-    fullName.focus();
+    resetOrderForm({ focus: true });
   });
 });
