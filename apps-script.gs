@@ -3,7 +3,7 @@
 
 var CONFIG = {
   SPREADSHEET_ID: "1qy4hSkdrHZZXTSdwcZJNLyu-ffRtQiXA58PmHHaNqhc",
-  SHEET_NAME: "Pesanan",
+  SHEET_NAME: "Order",
   NOTIFICATION_EMAIL: "nutrismeindonesia@gmail.com",
   TIME_ZONE: "Asia/Jakarta",
   APP_VERSION: "2026-07-17-3",
