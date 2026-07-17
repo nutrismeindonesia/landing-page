@@ -1,96 +1,69 @@
-NUTRISME - VERSI DIPERBAIKI (FRONT-END BUILD 2026-07-17-4)
-================================================================
+NUTRISME - FRONT-END BUILD 2026-07-17-5
+========================================
 
-PENTING SEBELUM MULAI
----------------------
-Ekstrak ZIP ini terlebih dahulu. Jangan meng-upload ZIP sebagai satu file.
-Upload isi folder hasil ekstrak ke repository GitHub Pages Nutrisme. Pastikan
-nama file tidak mendapat tambahan seperti "(1)".
+TUJUAN BUILD
+------------
+Build ini mengubah tautan "Kebijakan Privasi" pada formulir "Pesan Sekarang".
+Saat tautan ditekan, pengunjung sekarang melihat pop-up khusus yang terpisah dari
+form pemesanan. Pop-up berisi kebijakan yang lebih lengkap dan dapat digulir.
 
-Baca juga DEPLOY-CHECKLIST.txt untuk langkah upload dan pengujian singkat.
+PERUBAHAN UTAMA
+---------------
+1. Catatan privasi singkat di bawah checkbox dihapus.
+2. Tautan "Kebijakan Privasi" sekarang membuka dialog/pop-up kedua.
+3. Isi kebijakan mencakup:
+   - data yang dikumpulkan;
+   - tujuan penggunaan;
+   - persetujuan dan pemrosesan;
+   - penggunaan Google Apps Script dan Google Sheets;
+   - pihak yang dapat menerima data;
+   - penyimpanan dan keamanan;
+   - hak pengguna;
+   - data anak;
+   - perubahan kebijakan; dan
+   - kanal kontak terkait privasi.
+4. Pop-up dapat ditutup melalui tombol silang, tombol "Tutup Kebijakan Privasi",
+   klik backdrop, atau tombol Escape.
+5. Fokus keyboard dikunci di dialog yang sedang aktif dan dikembalikan ke tautan
+   Kebijakan Privasi setelah dialog ditutup.
+6. Checkbox tidak dicentang otomatis hanya karena kebijakan dibuka atau ditutup.
+7. Perbaikan modal sukses dari build sebelumnya tetap dipertahankan.
+8. Nomor build dan cache-buster diperbarui ke 2026-07-17-5.
 
-PERBAIKAN UTAMA BUILD 2026-07-17-4
-----------------------------------
-Masalah sebelumnya:
-Setelah pesanan berhasil dikirim, modal menampilkan pesan "Terima kasih!".
-Jika modal kemudian ditutup melalui backdrop/area di luar modal, tombol silang
-(X), atau tombol Escape, pembukaan berikutnya masih menampilkan pesan sukses
-tersebut. Form hanya di-reset ketika tombol "Pesan Lagi" ditekan.
-
-Perbaikan sekarang:
-1. Setiap kali tombol "Pesan Sekarang" membuka modal, script memeriksa apakah
-   modal masih berada pada tampilan sukses.
-2. Jika iya, modal di-reset ke form pemesanan baru yang kosong sebelum dibuka.
-3. Tombol "Pesan Lagi" memakai fungsi reset yang sama agar perilakunya konsisten.
-4. Form yang belum pernah berhasil dikirim tetap dipertahankan saat modal ditutup,
-   sehingga data yang sedang diketik tidak hilang secara tidak sengaja.
-5. Nomor build dan cache-buster front-end diperbarui ke 2026-07-17-4.
-
-FILE YANG DIUBAH PADA BUILD INI
--------------------------------
+FILE YANG DIUBAH
+----------------
 - index.html
 - script.js
-- README.txt
-- DEPLOY-CHECKLIST.txt (ditambahkan agar petunjuk deployment lengkap)
-
-FILE YANG TIDAK MEMERLUKAN PERUBAHAN UNTUK BUG MODAL
-----------------------------------------------------
 - style.css
-- apps-script.gs
-- seluruh file di folder assets/
-
-CATATAN PENTING TENTANG GOOGLE APPS SCRIPT
------------------------------------------
-Perbaikan build 2026-07-17-4 adalah perbaikan front-end. Jika pengiriman form ke
-Google Sheets sudah berjalan, Anda TIDAK perlu mengubah atau redeploy Google Apps
-Script hanya untuk memperbaiki bug modal ini.
-
-File apps-script.gs tetap disertakan sebagai salinan/backup backend dari paket
-sebelumnya. Meng-upload apps-script.gs ke GitHub tidak mengubah Web App Google
-Apps Script yang sedang aktif.
-
-STRUKTUR FILE
--------------
-- index.html
-- style.css
-- script.js
-- apps-script.gs
 - README.txt
 - DEPLOY-CHECKLIST.txt
-- assets/
-  - cook-kit-gradient.webp
-  - cook-kit.webp
-  - frozen-prep.webp
-  - meal-box-green.webp
-  - meal-box.webp
-  - nutrisme-mark.png
-  - nutrisme-stacked.png
-  - nutrisme-wordmark.png
-  - weekly-prep-gradient.webp
 
-DEPLOY CEPAT UNTUK PERBAIKAN MODAL
----------------------------------
-1. Ganti index.html dan script.js di root repository dengan versi dari paket ini.
-2. Commit dan push ke branch yang digunakan GitHub Pages.
-3. Tunggu proses deployment selesai.
-4. Buka https://www.nutrisme.biz.id/ lalu lakukan hard refresh:
+FILE YANG TIDAK BERUBAH
+-----------------------
+- seluruh file di folder assets/
+- Google Apps Script / backend
+
+CARA DEPLOY CEPAT
+-----------------
+1. Ganti index.html, script.js, dan style.css di root repository GitHub Pages.
+2. Commit dan push ke branch GitHub Pages yang aktif.
+3. Tunggu deployment selesai tanpa error.
+4. Buka https://www.nutrisme.biz.id/ dalam mode incognito atau hard refresh:
    - Windows/Linux: Ctrl+Shift+R
    - Mac: Cmd+Shift+R
-5. Uji alur pada DEPLOY-CHECKLIST.txt.
+5. Jalankan pengujian pada DEPLOY-CHECKLIST.txt.
 
-UPLOAD LENGKAP (OPSIONAL)
--------------------------
-Untuk menghindari perbedaan file, Anda juga dapat mengganti seluruh isi website
-dengan index.html, style.css, script.js, dan folder assets/ dari paket ini.
-
-CATATAN TEKNIS
+CATATAN BACKEND
 ---------------
-Akar masalah berada pada state tampilan modal di script.js. Fungsi penutup modal
-sebelumnya hanya menyembunyikan modal dan tidak mengembalikan orderSuccess ke
-orderFormView. Build ini menambahkan satu fungsi reset terpusat dan menjalankannya
-secara defensif saat modal dibuka kembali setelah submit sukses.
+Perubahan ini hanya pada front-end. Jika pengiriman formulir ke Google Sheets
+sudah berjalan, Google Apps Script tidak perlu diubah atau di-deploy ulang.
+Endpoint /exec yang ada pada script.js tetap dipertahankan.
 
-Endpoint Apps Script masih dipanggil menggunakan request form URL encoded dengan
-mode "no-cors". Browser dapat mendeteksi kegagalan jaringan atau timeout, tetapi
-karena sifat no-cors, validasi akhir pengiriman tetap perlu diperiksa melalui
-Spreadsheet dan menu Apps Script > Executions.
+CATATAN KEBIJAKAN PRIVASI
+-------------------------
+Teks yang disertakan merupakan template operasional berdasarkan data dan alur
+form saat ini. Pastikan praktik internal Nutrisme benar-benar sesuai dengan isi
+kebijakan, terutama mengenai siapa yang dapat mengakses data, pembagian kepada
+mitra pengiriman, periode penyimpanan, penghapusan, dan kanal kontak resmi.
+Lakukan peninjauan hukum sebelum mengandalkan teks ini sebagai dokumen kepatuhan
+final.

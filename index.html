@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0d5b48" />
-  <meta name="nutrisme-build" content="2026-07-17-4" />
+  <meta name="nutrisme-build" content="2026-07-17-5" />
   <meta name="description" content="Nutrisme menghadirkan meal prep sehat dengan nutrisi terukur, pilihan fleksibel, dan format yang praktis untuk rutinitas harian." />
   <title>Nutrisme — Meal Prep Sehat & Nutrisi Terukur</title>
   <link rel="icon" type="image/png" href="assets/nutrisme-mark.png" />
-  <link rel="stylesheet" href="style.css?v=20260717-4" />
+  <link rel="stylesheet" href="style.css?v=20260717-5" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
@@ -403,7 +403,7 @@
               </button>
             </h3>
             <div class="accordion-panel" hidden>
-              <p>Tekan tombol “Pesan Sekarang”, isi seluruh data yang diwajibkan, setujui Privacy &amp; Policy, lalu tekan Submit.</p>
+              <p>Tekan tombol “Pesan Sekarang”, isi seluruh data yang diwajibkan, setujui Kebijakan Privasi, lalu tekan Submit.</p>
             </div>
           </article>
         </div>
@@ -458,7 +458,7 @@
       <div id="orderFormView">
         <span class="section-kicker">Pesan sekarang</span>
         <h2 id="orderTitle">Lengkapi data pemesananmu.</h2>
-        <p class="modal__intro">Semua field wajib diisi. Tombol Submit akan aktif setelah data valid dan Privacy &amp; Policy disetujui.</p>
+        <p class="modal__intro">Semua field wajib diisi. Tombol Submit akan aktif setelah data valid dan Kebijakan Privasi disetujui.</p>
 
         <form id="orderForm" novalidate>
           <div class="form-field" data-field="fullName">
@@ -489,14 +489,10 @@
 
           <div class="consent-field" data-field="consent">
             <input id="consent" name="consent" type="checkbox" required />
-            <label for="consent">
-              Saya menyetujui
-              <button class="policy-link" id="policyToggle" type="button" aria-expanded="false" aria-controls="policyNote">Privacy &amp; Policy</button>
-            </label>
-          </div>
-
-          <div class="policy-note" id="policyNote" hidden>
-            Data yang diisi digunakan untuk menindaklanjuti pemesanan dan dikirim ke sistem Nutrisme setelah tombol Submit ditekan.
+            <div class="consent-copy">
+              <label for="consent">Saya telah membaca dan menyetujui</label>
+              <button class="policy-link" id="policyToggle" type="button" aria-haspopup="dialog" aria-controls="policyModal">Kebijakan Privasi</button><span aria-hidden="true">.</span>
+            </div>
           </div>
 
           <button class="button button--primary submit-button" id="submitOrder" type="submit" disabled>Submit</button>
@@ -516,7 +512,108 @@
     </section>
   </div>
 
-  <!-- Nutrisme build 2026-07-17-4 -->
-  <script src="script.js?v=20260717-4"></script>
+  <div class="modal modal--policy" id="policyModal" aria-hidden="true">
+    <div class="modal__backdrop policy-modal__backdrop" data-close-policy></div>
+    <section class="modal__dialog policy-dialog" role="dialog" aria-modal="true" aria-labelledby="policyTitle" aria-describedby="policyIntro" tabindex="-1">
+      <button class="modal__close" type="button" data-close-policy aria-label="Tutup Kebijakan Privasi">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+      </button>
+
+      <div class="modal__brand policy-dialog__brand">
+        <img src="assets/nutrisme-mark.png" alt="" />
+        <span>Nutrisme Privacy</span>
+      </div>
+
+      <span class="section-kicker">Privasi data</span>
+      <h2 id="policyTitle">Kebijakan Privasi Nutrisme</h2>
+      <p class="policy-dialog__lead" id="policyIntro">
+        Kebijakan ini menjelaskan data yang dikumpulkan melalui formulir “Pesan Sekarang”, tujuan penggunaannya, pihak yang dapat memprosesnya, serta pilihan dan hak pengguna atas data tersebut.
+      </p>
+      <p class="policy-updated">Terakhir diperbarui: 17 Juli 2026</p>
+
+      <div class="policy-summary" role="note">
+        <strong>Ringkasan</strong>
+        <p>Data formulir digunakan untuk menindaklanjuti pemesanan dan kebutuhan operasional terkait. Nutrisme tidak menjual atau menyewakan data pribadi yang dikirim melalui formulir ini.</p>
+      </div>
+
+      <div class="policy-content">
+        <section class="policy-section">
+          <h3>1. Cakupan kebijakan</h3>
+          <p>Kebijakan Privasi ini berlaku untuk data yang dikirim melalui formulir pemesanan pada situs Nutrisme. Kebijakan ini tidak otomatis berlaku untuk situs, aplikasi, atau layanan milik pihak lain yang mungkin diakses dari luar situs Nutrisme.</p>
+        </section>
+
+        <section class="policy-section">
+          <h3>2. Data yang kami kumpulkan</h3>
+          <p>Ketika formulir dikirim, Nutrisme dapat menerima:</p>
+          <ul>
+            <li>nama lengkap;</li>
+            <li>alamat yang dicantumkan untuk kebutuhan pemesanan atau pengiriman;</li>
+            <li>nomor handphone;</li>
+            <li>status persetujuan terhadap Kebijakan Privasi;</li>
+            <li>informasi teknis formulir, seperti waktu pengiriman, halaman asal, versi halaman, dan identitas permintaan unik untuk membantu mencegah pengiriman ganda serta menelusuri kendala teknis.</li>
+          </ul>
+          <p>Formulir ini tidak meminta kata sandi, PIN, nomor kartu pembayaran, nomor identitas, atau data kesehatan. Jangan memasukkan informasi sensitif tersebut pada kolom nama maupun alamat.</p>
+        </section>
+
+        <section class="policy-section">
+          <h3>3. Tujuan penggunaan data</h3>
+          <p>Data digunakan seperlunya untuk:</p>
+          <ul>
+            <li>menghubungi pengguna dan menindaklanjuti permintaan pemesanan;</li>
+            <li>mengonfirmasi produk, ketersediaan, harga, area pengiriman, jadwal, dan detail layanan;</li>
+            <li>menjalankan administrasi pesanan dan layanan pelanggan;</li>
+            <li>mendeteksi spam, penyalahgunaan, pengiriman ganda, atau gangguan teknis;</li>
+            <li>menyimpan catatan yang diperlukan untuk penyelesaian keluhan, sengketa, audit, atau kewajiban hukum.</li>
+          </ul>
+          <p>Data dari formulir ini tidak digunakan untuk keputusan otomatis atau profil pemasaran. Pesan promosi hanya akan dikirim apabila terdapat dasar atau persetujuan yang sesuai.</p>
+        </section>
+
+        <section class="policy-section">
+          <h3>4. Persetujuan dan pemrosesan</h3>
+          <p>Dengan mencentang kotak persetujuan dan menekan Submit, pengguna menyatakan telah membaca kebijakan ini serta menyetujui pemrosesan data untuk tujuan di atas. Pengguna dapat menarik persetujuan untuk pemrosesan berikutnya, tetapi penarikan tersebut tidak menghapus keabsahan pemrosesan yang telah dilakukan atau kewajiban penyimpanan yang diwajibkan oleh hukum.</p>
+        </section>
+
+        <section class="policy-section">
+          <h3>5. Sistem dan pihak yang dapat menerima data</h3>
+          <p>Data formulir dikirim ke sistem yang digunakan Nutrisme untuk mengelola permintaan pemesanan. Pada konfigurasi situs saat ini, proses tersebut menggunakan Google Apps Script dan Google Sheets sebagai infrastruktur pengiriman dan pencatatan.</p>
+          <p>Akses dibatasi kepada personel Nutrisme yang memerlukannya untuk menjalankan tugas. Apabila pesanan dilanjutkan, informasi yang relevan dapat dibagikan kepada mitra operasional, seperti penyedia pengiriman, hanya sejauh diperlukan untuk memenuhi pesanan. Data juga dapat diungkapkan apabila diwajibkan oleh hukum atau permintaan resmi dari pihak berwenang.</p>
+        </section>
+
+        <section class="policy-section">
+          <h3>6. Penyimpanan dan keamanan</h3>
+          <p>Nutrisme berupaya menerapkan langkah administratif dan teknis yang wajar untuk membatasi akses, perubahan, penggunaan, atau pengungkapan tanpa izin. Namun, tidak ada pengiriman maupun penyimpanan elektronik yang sepenuhnya bebas risiko.</p>
+          <p>Data disimpan selama masih diperlukan untuk menindaklanjuti permintaan, menyelesaikan transaksi, memenuhi kewajiban hukum, menjaga catatan bisnis yang wajar, atau menangani sengketa. Setelah tidak lagi diperlukan, data akan dihapus, dimusnahkan, atau dianonimkan sesuai prosedur yang berlaku.</p>
+        </section>
+
+        <section class="policy-section">
+          <h3>7. Hak pengguna</h3>
+          <p>Sesuai ketentuan yang berlaku, pengguna dapat meminta akses, salinan, koreksi, pembaruan, penghentian pemrosesan, penarikan persetujuan, atau penghapusan data pribadi. Sebagian permintaan dapat dibatasi apabila data masih dibutuhkan untuk memenuhi kewajiban hukum, menyelesaikan transaksi, menjaga keamanan, atau menangani sengketa.</p>
+          <p>Untuk melindungi data, Nutrisme dapat meminta verifikasi identitas sebelum memenuhi permintaan.</p>
+        </section>
+
+        <section class="policy-section">
+          <h3>8. Data anak</h3>
+          <p>Formulir pemesanan ditujukan bagi pengguna yang dapat memberikan persetujuan secara sah. Apabila pemesanan dilakukan untuk atau oleh anak, data sebaiknya disampaikan oleh orang tua atau wali yang berwenang.</p>
+        </section>
+
+        <section class="policy-section">
+          <h3>9. Perubahan kebijakan</h3>
+          <p>Nutrisme dapat memperbarui kebijakan ini apabila terdapat perubahan pada formulir, proses operasional, penyedia layanan, atau ketentuan hukum. Tanggal pembaruan akan dicantumkan pada bagian atas pop-up ini.</p>
+        </section>
+
+        <section class="policy-section">
+          <h3>10. Kontak terkait privasi</h3>
+          <p>Permintaan atau pertanyaan mengenai data pribadi dapat disampaikan melalui kanal kontak resmi Nutrisme yang tercantum pada situs atau akun <strong>@nutrisme.id</strong>. Sertakan nama, nomor handphone yang digunakan pada formulir, dan jenis permintaan agar dapat diverifikasi dan ditindaklanjuti.</p>
+        </section>
+      </div>
+
+      <div class="policy-actions">
+        <button class="button button--primary" type="button" data-close-policy>Tutup Kebijakan Privasi</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Nutrisme build 2026-07-17-5 -->
+  <script src="script.js?v=20260717-5"></script>
 </body>
 </html>

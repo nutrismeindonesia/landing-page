@@ -2,7 +2,7 @@
    The order form sends a simple cross-origin POST to Google Apps Script.
    Do not use application/json together with mode: "no-cors" here. */
 
-const NUTRISME_BUILD = "2026-07-17-4";
+const NUTRISME_BUILD = "2026-07-17-5";
 console.info(`[Nutrisme] build ${NUTRISME_BUILD}`);
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -120,7 +120,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const formStatus = document.getElementById("formStatus");
   const resetOrder = document.getElementById("resetOrder");
   const policyToggle = document.getElementById("policyToggle");
-  const policyNote = document.getElementById("policyNote");
+  const policyModal = document.getElementById("policyModal");
+  const policyDialog = policyModal.querySelector(".policy-dialog");
+  const closePolicyButtons = policyModal.querySelectorAll("[data-close-policy]");
 
   const fullName = document.getElementById("fullName");
   const address = document.getElementById("address");
@@ -129,12 +131,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const websiteTrap = document.getElementById("website");
 
   let lastFocusedElement = null;
+  let policyLastFocusedElement = null;
 
   const resetOrderForm = ({ focus = false } = {}) => {
     orderForm.reset();
     Object.values(fields).forEach((field) => field.classList.remove("is-valid", "is-invalid"));
-    policyNote.hidden = true;
-    policyToggle.setAttribute("aria-expanded", "false");
     orderSuccess.hidden = true;
     orderFormView.hidden = false;
     submitOrder.removeAttribute("aria-busy");
@@ -143,6 +144,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (focus && modal.classList.contains("is-open")) {
       window.setTimeout(() => fullName.focus(), 0);
+    }
+  };
+
+  const openPolicyModal = () => {
+    policyLastFocusedElement = document.activeElement;
+    policyModal.classList.add("is-open");
+    policyModal.setAttribute("aria-hidden", "false");
+    body.classList.add("modal-open");
+    policyDialog.scrollTop = 0;
+
+    window.requestAnimationFrame(() => {
+      policyDialog.focus({ preventScroll: true });
+      modalDialog.setAttribute("aria-hidden", "true");
+      modalDialog.setAttribute("inert", "");
+    });
+  };
+
+  const closePolicyModal = ({ restoreFocus = true } = {}) => {
+    policyModal.classList.remove("is-open");
+    policyModal.setAttribute("aria-hidden", "true");
+    modalDialog.removeAttribute("aria-hidden");
+    modalDialog.removeAttribute("inert");
+
+    if (!modal.classList.contains("is-open")) {
+      body.classList.remove("modal-open");
+    }
+
+    if (restoreFocus && policyLastFocusedElement instanceof HTMLElement && modal.classList.contains("is-open")) {
+      policyLastFocusedElement.focus();
     }
   };
 
@@ -159,24 +189,19 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const closeOrderModal = () => {
+    if (policyModal.classList.contains("is-open")) {
+      closePolicyModal({ restoreFocus: false });
+    }
+
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
     body.classList.remove("modal-open");
     if (lastFocusedElement instanceof HTMLElement) lastFocusedElement.focus();
   };
 
-  openOrderButtons.forEach((button) => button.addEventListener("click", openOrderModal));
-  closeOrderButtons.forEach((button) => button.addEventListener("click", closeOrderModal));
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && modal.classList.contains("is-open")) {
-      closeOrderModal();
-    }
-  });
-
-  modalDialog.addEventListener("keydown", (event) => {
+  const trapFocus = (dialog, event) => {
     if (event.key !== "Tab") return;
-    const focusable = [...modalDialog.querySelectorAll(
+    const focusable = [...dialog.querySelectorAll(
       'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
     )].filter((element) => !element.hidden && element.offsetParent !== null);
 
@@ -184,20 +209,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
 
-    if (event.shiftKey && document.activeElement === first) {
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
       event.preventDefault();
       last.focus();
     } else if (!event.shiftKey && document.activeElement === last) {
       event.preventDefault();
       first.focus();
     }
+  };
+
+  openOrderButtons.forEach((button) => button.addEventListener("click", openOrderModal));
+  closeOrderButtons.forEach((button) => button.addEventListener("click", closeOrderModal));
+  policyToggle.addEventListener("click", openPolicyModal);
+  closePolicyButtons.forEach((button) => button.addEventListener("click", () => closePolicyModal()));
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+
+    if (policyModal.classList.contains("is-open")) {
+      event.preventDefault();
+      closePolicyModal();
+      return;
+    }
+
+    if (modal.classList.contains("is-open")) {
+      closeOrderModal();
+    }
   });
 
-  policyToggle.addEventListener("click", () => {
-    const willOpen = policyNote.hidden;
-    policyNote.hidden = !willOpen;
-    policyToggle.setAttribute("aria-expanded", String(willOpen));
-  });
+  modalDialog.addEventListener("keydown", (event) => trapFocus(modalDialog, event));
+  policyDialog.addEventListener("keydown", (event) => trapFocus(policyDialog, event));
 
   const normalizePhone = (value) => {
     let digits = String(value || "").replace(/\D/g, "");
