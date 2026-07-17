@@ -7,7 +7,7 @@
 // ID spreadsheet kamu — ambil dari URL spreadsheet
 // Contoh URL: https://docs.google.com/spreadsheets/d/XXXXX/edit
 // Bagian XXXXX itulah yang kamu tempel di bawah
-var SPREADSHEET_ID = "GANTI_DENGAN_ID_SPREADSHEET_KAMU";
+var SPREADSHEET_ID = "1qy4hSkdrHZZXTSdwcZJNLyu-ffRtQiXA58PmHHaNqhc";
 
 // Email yang akan menerima notifikasi setiap ada pesanan masuk
 var EMAIL_NOTIFIKASI = "nutrismeindonesia@gmail.com";
