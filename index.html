@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07563f">
-  <meta name="nutrisme-build" content="2026-07-18-1">
+  <meta name="nutrisme-build" content="2026-07-18-2">
   <meta name="description" content="Nutrisme menyediakan makanan sehat dengan informasi nutrisi lengkap serta pilihan fresh meal, ready-to-heat, dan ready-to-cook.">
   <title>Nutrisme — Eat Healthy, Your Way</title>
   <link rel="icon" type="image/png" href="assets/nutrisme-mark.png">
-  <link rel="stylesheet" href="style.css?v=20260718-1">
+  <link rel="stylesheet" href="style.css?v=20260718-2">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
@@ -146,7 +146,7 @@
   <button class="floating-order" type="button" data-open-order>Berlangganan</button>
 
   <div class="modal" id="orderModal" aria-hidden="true">
-    <div class="modal-backdrop" data-close-order></div>
+    <div class="modal-backdrop" id="orderBackdrop"></div>
     <section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="orderTitle" tabindex="-1">
       <button class="modal-close" type="button" data-close-order aria-label="Tutup">×</button>
       <div id="orderFormView">
@@ -161,15 +161,63 @@
           <div class="form-field" data-field="phone"><label for="phone">No. Handphone</label><div class="prefix-input"><span>+62</span><input id="phone" name="phone" type="tel" inputmode="numeric" minlength="8" maxlength="15" required placeholder="81234567890"></div><small>Nomor harus diawali angka 8.</small></div>
           <div class="form-field"><label for="selectedPlan">Paket Pilihan</label><select id="selectedPlan" name="selectedPlan"><option value="Belum menentukan">Belum menentukan</option><option>Nutrisme Daily</option><option>Nutrisme Ready</option><option>Nutrisme Cook</option></select></div>
           <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" class="honeypot">
-          <label class="consent"><input id="consent" type="checkbox" required><span>Saya menyetujui pemrosesan data untuk keperluan berlangganan Nutrisme.</span></label>
+          <div class="consent" data-field="consent">
+            <input id="consent" type="checkbox" required>
+            <div class="consent-copy">
+              <label for="consent">Saya telah membaca dan menyetujui</label>
+              <button class="privacy-link" id="privacyToggle" type="button" aria-haspopup="dialog" aria-controls="privacyModal">Privacy Policy</button><span aria-hidden="true">.</span>
+            </div>
+          </div>
           <button class="btn btn-primary submit-btn" id="submitOrder" type="submit" disabled>Berlangganan Sekarang</button>
           <p class="form-status" id="formStatus" aria-live="polite"></p>
         </form>
       </div>
-      <div class="success" id="orderSuccess" hidden><div>✓</div><h2>Terima kasih!</h2><p>Data langgananmu sudah dikirim. Tim Nutrisme akan menghubungimu.</p><button class="btn btn-primary" id="resetOrder" type="button">Isi Form Lagi</button></div>
+      <div class="success" id="orderSuccess" hidden><div>✓</div><h2>Terima kasih!</h2><p>Data langgananmu sudah dikirim. Tim Nutrisme akan menghubungimu.</p><button class="btn btn-primary" id="resetOrder" type="button">Pesan Lagi</button></div>
     </section>
   </div>
 
-  <script src="script.js?v=20260718-1" defer></script>
+  <div class="modal privacy-modal" id="privacyModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-privacy></div>
+    <section class="modal-dialog privacy-dialog" role="dialog" aria-modal="true" aria-labelledby="privacyTitle" aria-describedby="privacyIntro" tabindex="-1">
+      <button class="modal-close" type="button" data-close-privacy aria-label="Tutup Privacy Policy">×</button>
+      <img class="modal-logo" src="assets/nutrisme-wordmark.png" alt="Nutrisme">
+      <span class="kicker">PRIVACY POLICY</span>
+      <h2 id="privacyTitle">Kebijakan Privasi Nutrisme</h2>
+      <p id="privacyIntro" class="privacy-intro">Kebijakan ini menjelaskan bagaimana data pada formulir berlangganan dikumpulkan dan digunakan.</p>
+
+      <div class="privacy-content">
+        <section>
+          <h3>1. Data yang dikumpulkan</h3>
+          <p>Nutrisme menerima nama lengkap, username Instagram, alamat, nomor handphone, paket pilihan, persetujuan Privacy Policy, serta informasi teknis pengiriman formulir.</p>
+        </section>
+        <section>
+          <h3>2. Tujuan penggunaan</h3>
+          <p>Data digunakan untuk menghubungi pelanggan, mengonfirmasi paket dan harga, mengatur pengiriman, memberikan layanan pelanggan, serta mencegah spam atau pengiriman formulir ganda.</p>
+        </section>
+        <section>
+          <h3>3. Penyimpanan dan pihak yang memproses</h3>
+          <p>Data formulir diproses melalui Google Apps Script dan dicatat pada Google Sheets. Akses hanya diberikan kepada pihak Nutrisme atau mitra operasional yang membutuhkannya untuk memproses layanan.</p>
+        </section>
+        <section>
+          <h3>4. Keamanan dan masa penyimpanan</h3>
+          <p>Nutrisme menerapkan langkah yang wajar untuk menjaga data. Data disimpan selama diperlukan untuk memproses langganan, memenuhi kewajiban operasional atau hukum, dan menyelesaikan keluhan.</p>
+        </section>
+        <section>
+          <h3>5. Hak pelanggan</h3>
+          <p>Pelanggan dapat meminta akses, koreksi, pembaruan, atau penghapusan data dengan menghubungi Nutrisme melalui WhatsApp 0812-3456-7890 atau email hello@nutrisme.com.</p>
+        </section>
+        <section>
+          <h3>6. Persetujuan</h3>
+          <p>Dengan mencentang persetujuan dan menekan “Berlangganan Sekarang”, pelanggan menyatakan telah membaca serta menyetujui pemrosesan data sesuai kebijakan ini.</p>
+        </section>
+      </div>
+
+      <div class="privacy-actions">
+        <button class="btn btn-primary" type="button" data-close-privacy>Tutup Privacy Policy</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js?v=20260718-2" defer></script>
 </body>
 </html>
