@@ -6,11 +6,11 @@ var CONFIG = {
   SHEET_NAME: "Order",
   NOTIFICATION_EMAIL: "nutrismeindonesia@gmail.com",
   TIME_ZONE: "Asia/Jakarta",
-  APP_VERSION: "2026-07-17-3",
+  APP_VERSION: "2026-07-18-1",
   SEND_EMAIL: true
 };
 
-var HEADERS = ["No", "Waktu", "Nama Lengkap", "Alamat", "No. Handphone"];
+var HEADERS = ["No", "Waktu", "Nama Lengkap", "Username Instagram", "Alamat", "No. Handphone", "Paket Pilihan"];
 
 // Health endpoint. Open the deployed /exec URL in an incognito browser.
 // A correct deployment returns JSON with status "ok" instead of doGet not found.
@@ -49,13 +49,15 @@ function doPost(e) {
     var orderNumber = nextRow - 1;
 
     sheet.getRange(nextRow, 2).setNumberFormat("dd/MM/yyyy HH:mm:ss");
-    sheet.getRange(nextRow, 5).setNumberFormat("@");
+    sheet.getRange(nextRow, 6).setNumberFormat("@");
     sheet.getRange(nextRow, 1, 1, HEADERS.length).setValues([[
       orderNumber,
       order.createdAt,
       order.name,
+      order.instagram,
       order.address,
-      order.phone
+      order.phone,
+      order.plan
     ]]);
     SpreadsheetApp.flush();
 
@@ -131,8 +133,10 @@ function testWriteNutrisme() {
         action: "createOrder",
         requestId: requestId,
         nama: "TEST NUTRISME",
+        instagram: "nutrisme.test",
         alamat: "Baris uji manual dari Google Apps Script",
         telepon: "81234567890",
+        paket: "Nutrisme Ready",
         consent: "yes",
         source: "Apps Script editor",
         waktuKlien: new Date().toISOString(),
@@ -195,13 +199,19 @@ function parseFormBody_(raw) {
 
 function validateOrder_(data) {
   var name = cleanText_(data.nama, 100);
+  var instagram = normalizeInstagram_(data.instagram);
   var address = cleanText_(data.alamat, 1000);
   var phone = normalizePhone_(data.telepon);
+  var plan = cleanText_(data.paket, 100) || "Belum menentukan";
   var consent = String(data.consent || "").toLowerCase();
   var legacyRequest = typeof data.consent === "undefined" && Boolean(data.waktu);
 
   if (name.length < 3) {
     throw new Error("Nama lengkap minimal 3 karakter.");
+  }
+
+  if (!/^[A-Za-z0-9._]{2,50}$/.test(instagram)) {
+    throw new Error("Username Instagram tidak valid.");
   }
 
   if (address.length < 10) {
@@ -214,13 +224,22 @@ function validateOrder_(data) {
 
   return {
     name: name,
+    instagram: "@" + instagram,
     address: address,
     phone: phone,
+    plan: plan,
     requestId: cleanText_(data.requestId, 120) || Utilities.getUuid(),
     source: cleanText_(data.source, 500),
     clientTime: cleanText_(data.waktuKlien, 100),
     createdAt: new Date()
   };
+}
+
+function normalizeInstagram_(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^@/, "")
+    .substring(0, 50);
 }
 
 function normalizePhone_(value) {
@@ -257,15 +276,8 @@ function getOrCreateSheet_() {
     sheet = spreadsheet.insertSheet(CONFIG.SHEET_NAME);
   }
 
-  if (sheet.getLastRow() === 0) {
-    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-  } else {
-    var firstRow = sheet.getRange(1, 1, 1, HEADERS.length).getDisplayValues()[0];
-    var headerIsEmpty = firstRow.join("").trim() === "";
-    if (headerIsEmpty) {
-      sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-    }
-  }
+  // Always synchronize the header row with the current form schema.
+  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
 
   var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
   headerRange.setBackground("#0d5b48");
@@ -285,8 +297,10 @@ function sendNotificationEmail_(order, orderNumber) {
     "No. Pesanan : #" + orderNumber + "\n" +
     "Waktu        : " + Utilities.formatDate(order.createdAt, CONFIG.TIME_ZONE, "dd/MM/yyyy HH:mm:ss") + "\n" +
     "Nama         : " + order.name + "\n" +
+    "Instagram    : " + order.instagram + "\n" +
     "Alamat       : " + order.address + "\n" +
     "No. HP       : " + order.phone + "\n" +
+    "Paket        : " + order.plan + "\n" +
     "ID Request   : " + order.requestId + "\n\n" +
     "Silakan tindak lanjuti segera.\n\n" +
     "- Sistem Nutrisme";
