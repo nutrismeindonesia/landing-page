@@ -1,54 +1,44 @@
-NUTRISME BUILD 2026-07-17-4 - DEPLOY & TEST CHECKLIST
-======================================================
+NUTRISME - CHECKLIST KONEKSI GOOGLE SHEETS (BUILD 2026-07-19-13)
+================================================================
 
-SEBELUM UPLOAD
---------------
-[ ] ZIP sudah diekstrak.
-[ ] index.html dan script.js berasal dari build 2026-07-17-4.
-[ ] Folder assets/ tetap berada satu level dengan index.html.
-[ ] Nama file tidak memiliki tambahan seperti "(1)".
+A. DI GOOGLE APPS SCRIPT
+[ ] Buka project Apps Script yang terhubung dengan Spreadsheet Nutrisme.
+[ ] Hapus kode lama, lalu tempel seluruh isi apps-script.gs build 2026-07-19-13.
+[ ] Pastikan CONFIG.SPREADSHEET_ID sesuai dengan ID Spreadsheet Nutrisme.
+[ ] Save.
+[ ] Jalankan setupNutrisme() dan izinkan akses yang diminta.
+[ ] Jalankan testConnectionNutrisme(). Hasil harus status: ok.
+[ ] Jalankan testHeroLeadNutrisme(). Baris TEST HERO harus muncul di sheet Order.
+[ ] Deploy > Manage deployments > Edit (ikon pensil).
+[ ] Version: New version.
+[ ] Execute as: Me.
+[ ] Who has access: Anyone.
+[ ] Deploy dan salin URL yang berakhir /exec.
 
-UPLOAD KE GITHUB PAGES
-----------------------
-[ ] Ganti index.html di root repository.
-[ ] Ganti script.js di root repository.
-[ ] Commit dan push ke branch GitHub Pages yang aktif.
-[ ] Tunggu deployment GitHub Pages selesai tanpa error.
-[ ] Buka https://www.nutrisme.biz.id/ dalam mode incognito atau lakukan hard refresh.
+B. DI WEBSITE
+[ ] Buka index.html.
+[ ] Pastikan meta nutrisme-apps-script-url berisi URL /exec yang aktif.
+[ ] Upload index.html, script.js, style.css, dan folder assets.
+[ ] Hard refresh atau buka melalui incognito.
 
-UJI BUG YANG DIPERBAIKI - TOMBOL SILANG (X)
--------------------------------------------
-[ ] Klik "Pesan Sekarang".
-[ ] Isi Nama Lengkap, Alamat, dan No. Handphone.
-[ ] Centang Privacy & Policy lalu klik Submit.
-[ ] Pastikan pesan "Terima kasih!" tampil.
-[ ] Tutup modal dengan tombol silang (X).
-[ ] Klik "Pesan Sekarang" lagi.
-[ ] Pastikan yang tampil adalah form baru yang kosong, bukan pesan "Terima kasih!".
+C. TES ENDPOINT
+Buka URL berikut di incognito:
+<URL_EXEC>?action=health
 
-UJI BUG YANG DIPERBAIKI - BACKDROP / AREA DI LUAR MODAL
--------------------------------------------------------
-[ ] Kirim satu pesanan uji sampai pesan "Terima kasih!" tampil.
-[ ] Klik area gelap di luar kotak modal.
-[ ] Klik "Pesan Sekarang" lagi.
-[ ] Pastikan yang tampil adalah form baru yang kosong.
+Hasil yang benar memuat:
+- "status":"ok"
+- "connected":true
+- "version":"2026-07-19-13"
 
-UJI TAMBAHAN - TOMBOL ESCAPE
-----------------------------
-[ ] Kirim satu pesanan uji sampai pesan "Terima kasih!" tampil.
-[ ] Tekan tombol Escape.
-[ ] Klik "Pesan Sekarang" lagi.
-[ ] Pastikan yang tampil adalah form baru yang kosong.
+D. TES FORM
+[ ] Isi Nama Lengkap dan Username Instagram di Hero.
+[ ] Centang Privacy Policy.
+[ ] Klik Submit.
+[ ] Pesan sukses hanya boleh muncul setelah Request ID ditemukan di Spreadsheet.
+[ ] Pastikan baris baru muncul di tab Order.
 
-UJI PERILAKU FORM BELUM DIKIRIM
--------------------------------
-[ ] Buka form dan isi sebagian data tanpa menekan Submit.
-[ ] Tutup modal lalu buka kembali.
-[ ] Pastikan data parsial masih tersedia. Ini adalah perilaku yang disengaja.
-
-BACKEND
--------
-[ ] Tidak perlu redeploy Google Apps Script untuk perbaikan modal ini apabila
-    pengiriman ke Spreadsheet sebelumnya sudah berjalan.
-[ ] Jika melakukan tes submit sungguhan, periksa baris baru pada Spreadsheet dan
-    Apps Script > Executions.
+Jika form menampilkan pesan "belum terhubung", penyebabnya hampir selalu salah satu dari:
+- apps-script.gs terbaru belum dideploy sebagai New version;
+- akses web app bukan Anyone;
+- URL /exec di index.html bukan deployment yang aktif;
+- SPREADSHEET_ID salah atau akun Apps Script tidak memiliki akses ke Spreadsheet.

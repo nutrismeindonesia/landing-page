@@ -1,4 +1,4 @@
-const NUTRISME_BUILD = "2026-07-19-12";
+const NUTRISME_BUILD = "2026-07-19-13";
 
 const TRANSLATIONS = {
   id: {
@@ -32,7 +32,8 @@ const TRANSLATIONS = {
     "hero.statusSending": "Mengirim data...",
     "hero.statusInvalid": "Periksa kembali data yang belum valid.",
     "hero.statusFailed": "Data belum berhasil dikirim. Coba lagi.",
-    "hero.statusTimeout": "Pengiriman terlalu lama. Coba lagi.",
+    "hero.statusTimeout": "Data belum terkonfirmasi di Spreadsheet. Periksa deployment Apps Script lalu coba lagi.",
+    "hero.statusBackend": "Form belum terhubung ke Google Sheets. Periksa deployment Apps Script.",
     "hero.title": "Makan Sehat.<br><span>Sesuai Caramu</span>",
     "hero.description": "Ketahui kandungan gula, garam, lemak, serat, kalori, dan protein di setiap menu. Pilih Fresh Meal, Ready-to-Heat, atau Ready-to-Cook sesuai kebutuhanmu.",
     "promo.aria": "Promo pelanggan baru",
@@ -188,7 +189,8 @@ const TRANSLATIONS = {
     "hero.statusSending": "Sending your details...",
     "hero.statusInvalid": "Please review the fields that are not valid.",
     "hero.statusFailed": "Your details could not be sent. Please try again.",
-    "hero.statusTimeout": "The request took too long. Please try again.",
+    "hero.statusTimeout": "The data was not confirmed in the Spreadsheet. Check the Apps Script deployment and try again.",
+    "hero.statusBackend": "The form is not connected to Google Sheets. Check the Apps Script deployment.",
     "hero.title": "Eat Healthy.<br><span>Your Way</span>",
     "hero.description": "See the sugar, salt, fat, fibre, calories, and protein in every menu. Choose Fresh Meal, Ready-to-Heat, or Ready-to-Cook based on your needs.",
     "promo.aria": "New customer promotion",
@@ -286,7 +288,8 @@ const TRANSLATIONS = {
     "status.complete": "Your details are complete. You may submit the form.",
     "status.invalid": "Please review the fields that are not valid.",
     "status.sending": "Sending your details...",
-    "status.timeout": "The request took too long. Please try again.",
+    "status.timeout": "The data was not confirmed in the Spreadsheet. Check the Apps Script deployment and try again.",
+    "status.backend": "The form is not connected to Google Sheets. Check the Apps Script deployment.",
     "status.failed": "Your details could not be sent. Please try again.",
     "success.title": "Thank you!",
     "success.fullText": "Your subscription request has been sent. The Nutrisme team will verify the offer and contact you for confirmation.",
@@ -701,7 +704,128 @@ document.addEventListener("DOMContentLoaded", () => {
   selectedPlan.addEventListener("blur", () => mark("selectedPlan", true));
   consent.addEventListener("change", update);
 
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN0ZfvGFX1RPp8pFj4Afxk1Q3JECumWYuaZYel8PY-Fc4OvleOvyzHSq_Ljr1sx69X/exec";
+  const appsScriptMeta = document.querySelector('meta[name="nutrisme-apps-script-url"]');
+  const APPS_SCRIPT_URL = String(appsScriptMeta ? appsScriptMeta.content : "").trim();
+  const SUBMISSION_CONFIRM_TIMEOUT_MS = 30000;
+  const STATUS_POLL_INTERVAL_MS = 900;
+
+  const delay = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+
+  const jsonpRequest = (parameters, timeoutMs = 8000) => new Promise((resolve, reject) => {
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(APPS_SCRIPT_URL)) {
+      const error = new Error("Apps Script URL tidak valid.");
+      error.code = "BACKEND_CONFIG";
+      reject(error);
+      return;
+    }
+
+    const callbackName = `__nutrismeJsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const script = document.createElement("script");
+    let timer = null;
+
+    const cleanup = () => {
+      if (timer) window.clearTimeout(timer);
+      script.remove();
+      try {
+        delete window[callbackName];
+      } catch (error) {
+        window[callbackName] = undefined;
+      }
+    };
+
+    window[callbackName] = (response) => {
+      cleanup();
+      resolve(response);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      const error = new Error("Apps Script tidak dapat dijangkau.");
+      error.code = "BACKEND_UNREACHABLE";
+      reject(error);
+    };
+
+    const query = new URLSearchParams({
+      ...parameters,
+      callback: callbackName,
+      _: String(Date.now())
+    });
+    script.src = `${APPS_SCRIPT_URL}?${query.toString()}`;
+    script.async = true;
+
+    timer = window.setTimeout(() => {
+      cleanup();
+      const error = new Error("Apps Script tidak merespons.");
+      error.code = "BACKEND_UNREACHABLE";
+      reject(error);
+    }, timeoutMs);
+
+    document.head.appendChild(script);
+  });
+
+  const postViaHiddenFrame = (payload) => {
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(APPS_SCRIPT_URL)) {
+      const error = new Error("Apps Script URL tidak valid.");
+      error.code = "BACKEND_CONFIG";
+      throw error;
+    }
+
+    const frameName = `nutrismeSubmit_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const frame = document.createElement("iframe");
+    frame.name = frameName;
+    frame.title = "Nutrisme submission transport";
+    frame.hidden = true;
+
+    const transportForm = document.createElement("form");
+    transportForm.method = "POST";
+    transportForm.action = APPS_SCRIPT_URL;
+    transportForm.target = frameName;
+    transportForm.hidden = true;
+
+    Object.entries(payload).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = String(value == null ? "" : value);
+      transportForm.appendChild(input);
+    });
+
+    document.body.append(frame, transportForm);
+    transportForm.submit();
+    transportForm.remove();
+    window.setTimeout(() => frame.remove(), SUBMISSION_CONFIRM_TIMEOUT_MS + 5000);
+  };
+
+  const waitForStoredRequest = async (requestId) => {
+    const deadline = Date.now() + SUBMISSION_CONFIRM_TIMEOUT_MS;
+    let lastError = null;
+
+    while (Date.now() < deadline) {
+      try {
+        const response = await jsonpRequest({ action: "status", requestId }, 7000);
+        if (response && response.status === "error") {
+          const error = new Error(response.message || "Apps Script mengembalikan error.");
+          error.code = "BACKEND_ERROR";
+          throw error;
+        }
+        if (response && response.status === "ok" && response.found === true) {
+          return response;
+        }
+      } catch (error) {
+        lastError = error;
+      }
+      await delay(STATUS_POLL_INTERVAL_MS);
+    }
+
+    const error = new Error(lastError ? lastError.message : "Data tidak ditemukan di Spreadsheet.");
+    error.code = lastError && lastError.code === "BACKEND_ERROR" ? "BACKEND_ERROR" : "SUBMISSION_UNCONFIRMED";
+    throw error;
+  };
+
+  const submitToSpreadsheet = async (payload) => {
+    postViaHiddenFrame(payload);
+    return waitForStoredRequest(payload.requestId);
+  };
 
   const createRequestId = () => {
     if (window.crypto && typeof window.crypto.randomUUID === "function") {
@@ -730,28 +854,20 @@ document.addEventListener("DOMContentLoaded", () => {
     heroSubmit.setAttribute("aria-busy", "true");
     heroFormStatus.textContent = t("hero.statusSending");
 
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 20000);
+    const requestId = createRequestId();
 
     try {
-      await fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        cache: "no-store",
-        redirect: "follow",
-        body: new URLSearchParams({
-          action: "createHeroLead",
-          build: NUTRISME_BUILD,
-          requestId: createRequestId(),
-          bahasa: currentLanguage,
-          nama: heroFullName.value.trim(),
-          instagram: normalizeIg(heroInstagram.value),
-          consent: "yes",
-          source: `${window.location.href.split("#")[0]}#hero-quick-form`,
-          waktuKlien: new Date().toISOString(),
-          website: heroWebsite.value.trim()
-        }),
-        signal: controller.signal
+      await submitToSpreadsheet({
+        action: "createHeroLead",
+        build: NUTRISME_BUILD,
+        requestId,
+        bahasa: currentLanguage,
+        nama: heroFullName.value.trim(),
+        instagram: normalizeIg(heroInstagram.value),
+        consent: "yes",
+        source: `${window.location.href.split("#")[0]}#hero-quick-form`,
+        waktuKlien: new Date().toISOString(),
+        website: heroWebsite.value.trim()
       });
 
       heroLeadForm.reset();
@@ -760,10 +876,11 @@ document.addEventListener("DOMContentLoaded", () => {
       updateHeroStatus();
       showSuccess("hero");
     } catch (error) {
-      heroFormStatus.textContent = error && error.name === "AbortError" ? t("hero.statusTimeout") : t("hero.statusFailed");
+      console.error("Hero lead gagal tersimpan:", error);
+      const backendProblem = error && ["BACKEND_CONFIG", "BACKEND_UNREACHABLE", "BACKEND_ERROR"].includes(error.code);
+      heroFormStatus.textContent = t(backendProblem ? "hero.statusBackend" : "hero.statusTimeout");
       heroSubmit.disabled = false;
     } finally {
-      window.clearTimeout(timer);
       heroSubmit.removeAttribute("aria-busy");
     }
   });
@@ -792,39 +909,32 @@ document.addEventListener("DOMContentLoaded", () => {
     submit.setAttribute("aria-busy", "true");
     status.textContent = t("status.sending");
 
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 20000);
+    const requestId = createRequestId();
 
     try {
-      await fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        cache: "no-store",
-        redirect: "follow",
-        body: new URLSearchParams({
-          action: "createOrder",
-          build: NUTRISME_BUILD,
-          requestId: createRequestId(),
-          bahasa: currentLanguage,
-          nama: fullName.value.trim(),
-          instagram: normalizeIg(instagram.value),
-          alamat: address.value.trim(),
-          telepon: normalizePhone(phone.value),
-          paket: selectedPlan.value,
-          consent: "yes",
-          source: window.location.href,
-          waktuKlien: new Date().toISOString(),
-          website: website.value.trim()
-        }),
-        signal: controller.signal
+      await submitToSpreadsheet({
+        action: "createOrder",
+        build: NUTRISME_BUILD,
+        requestId,
+        bahasa: currentLanguage,
+        nama: fullName.value.trim(),
+        instagram: normalizeIg(instagram.value),
+        alamat: address.value.trim(),
+        telepon: normalizePhone(phone.value),
+        paket: selectedPlan.value,
+        consent: "yes",
+        source: window.location.href,
+        waktuKlien: new Date().toISOString(),
+        website: website.value.trim()
       });
 
       showSuccess("full");
     } catch (error) {
-      status.textContent = error && error.name === "AbortError" ? t("status.timeout") : t("status.failed");
+      console.error("Subscription gagal tersimpan:", error);
+      const backendProblem = error && ["BACKEND_CONFIG", "BACKEND_UNREACHABLE", "BACKEND_ERROR"].includes(error.code);
+      status.textContent = t(backendProblem ? "status.backend" : "status.timeout");
       submit.disabled = false;
     } finally {
-      window.clearTimeout(timer);
       submit.removeAttribute("aria-busy");
     }
   });
@@ -833,6 +943,21 @@ document.addEventListener("DOMContentLoaded", () => {
     event.stopPropagation();
     resetOrderForm({ focus: true });
   });
+
+  jsonpRequest({ action: "health" }, 9000)
+    .then((response) => {
+      const connected = response && response.status === "ok" && response.connected === true;
+      document.documentElement.dataset.backend = connected ? "connected" : "error";
+      if (!connected || response.version !== NUTRISME_BUILD) {
+        console.warn("[Nutrisme] Apps Script deployment perlu diperbarui.", response);
+      } else {
+        console.info(`[Nutrisme] Google Sheets connected — backend ${response.version}`);
+      }
+    })
+    .catch((error) => {
+      document.documentElement.dataset.backend = "error";
+      console.error("[Nutrisme] Google Sheets connection failed:", error);
+    });
 
   applyLanguage(currentLanguage);
   update();

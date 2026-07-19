@@ -1,4 +1,4 @@
-NUTRISME LANDING PAGE - BUILD 2026-07-19-12
+NUTRISME LANDING PAGE - BUILD 2026-07-19-13
 ============================================
 
 RINGKASAN PERUBAHAN
@@ -219,3 +219,34 @@ BUILD 2026-07-19-12
 - Tombol "Berlangganan" pada header sekarang melakukan smooth scroll ke form singkat di Hero Section.
 - Setelah scroll selesai, field Nama Lengkap otomatis mendapat fokus.
 - Tombol tidak lagi membuka form berlangganan modal.
+
+
+BUILD 2026-07-19-13 — PERBAIKAN KONEKSI GOOGLE SHEETS
+-----------------------------------------------------
+1. Front-end tidak lagi memakai fetch mode no-cors yang sebelumnya dapat
+   menampilkan pesan sukses walaupun Apps Script gagal menulis data.
+2. Pengiriman sekarang menggunakan native POST ke web app melalui iframe
+   tersembunyi, sehingga tidak bergantung pada izin CORS.
+3. Setelah POST, website memeriksa Request ID melalui endpoint JSONP sampai
+   baris benar-benar ditemukan di Spreadsheet. Pesan sukses hanya tampil
+   setelah data terkonfirmasi tersimpan.
+4. Endpoint health dan status ditambahkan pada Apps Script.
+5. URL Apps Script dipusatkan pada meta nutrisme-apps-script-url di index.html.
+6. Apps Script dapat menggunakan SPREADSHEET_ID yang dikonfigurasi dan memiliki
+   fallback ke Spreadsheet aktif apabila project terikat langsung ke Sheet.
+7. Schema Sheet lama dimigrasikan berdasarkan nama kolom agar data lama tidak
+   tertukar ketika kolom baru ditambahkan.
+
+DEPLOYMENT WAJIB
+----------------
+- Tempel seluruh apps-script.gs build 2026-07-19-13 ke project Apps Script.
+- Jalankan setupNutrisme(), lalu testConnectionNutrisme(), kemudian
+  testHeroLeadNutrisme(). Pastikan baris uji muncul pada tab Order.
+- Deploy > Manage deployments > Edit > New version.
+- Execute as: Me.
+- Who has access: Anyone.
+- Jika membuat deployment baru dan URL /exec berubah, salin URL tersebut ke
+  meta nutrisme-apps-script-url di index.html.
+- Buka URL berikut dalam incognito:
+  /exec?action=health
+  Respons harus memuat status ok, connected true, dan version 2026-07-19-13.

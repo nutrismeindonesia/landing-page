@@ -1,14 +1,14 @@
 // Nutrisme - Google Apps Script backend
-// Build 2026-07-19-7
+// Build 2026-07-19-13
 // Paste this file into the Apps Script project, save it, run setupNutrisme(),
 // then deploy a new web-app version.
 
 var CONFIG = {
   SPREADSHEET_ID: "1qy4hSkdrHZZXTSdwcZJNLyu-ffRtQiXA58PmHHaNqhc",
   SHEET_NAME: "Order",
-  NOTIFICATION_EMAIL: "nutrismeindonesia@gmail.com",
+  NOTIFICATION_EMAIL: "nutrisme.indonesia@gmail.com",
   TIME_ZONE: "Asia/Jakarta",
-  APP_VERSION: "2026-07-19-7",
+  APP_VERSION: "2026-07-19-13",
   SEND_EMAIL: true,
   NEW_CUSTOMER_DISCOUNT: 100000,
   PROMO_BLOCKING_STATUSES: ["PAID", "ACTIVE"],
@@ -40,18 +40,53 @@ var HEADERS = [
   "Waktu Klien"
 ];
 
-function doGet() {
-  return jsonOutput_({
-    status: "ok",
-    service: "Nutrisme subscription endpoint",
-    version: CONFIG.APP_VERSION,
-    promotion: {
-      amount: CONFIG.NEW_CUSTOMER_DISCOUNT,
-      appliesTo: "first monthly payment",
-      blockingStatuses: CONFIG.PROMO_BLOCKING_STATUSES
-    },
-    time: Utilities.formatDate(new Date(), CONFIG.TIME_ZONE, "yyyy-MM-dd HH:mm:ss")
-  });
+function doGet(e) {
+  var parameters = e && e.parameter ? e.parameter : {};
+  var callback = cleanText_(parameters.callback, 180);
+
+  try {
+    var action = cleanText_(parameters.action || "health", 40);
+
+    if (action === "status") {
+      var requestId = cleanText_(parameters.requestId, 120);
+      if (!requestId) throw new Error("Request ID wajib diisi.");
+
+      var statusSpreadsheet = getSpreadsheet_();
+      var statusSheet = statusSpreadsheet.getSheetByName(CONFIG.SHEET_NAME);
+      var existing = statusSheet ? findExistingRequest_(statusSheet, requestId) : null;
+
+      return webOutput_({
+        status: "ok",
+        connected: true,
+        found: Boolean(existing),
+        orderNumber: existing ? existing.orderNumber : null,
+        promoEligible: existing ? existing.promoEligible : null,
+        version: CONFIG.APP_VERSION
+      }, callback);
+    }
+
+    var sheet = getOrCreateSheet_();
+    return webOutput_({
+      status: "ok",
+      connected: true,
+      service: "Nutrisme subscription endpoint",
+      sheet: sheet.getName(),
+      version: CONFIG.APP_VERSION,
+      promotion: {
+        amount: CONFIG.NEW_CUSTOMER_DISCOUNT,
+        appliesTo: "first monthly payment",
+        blockingStatuses: CONFIG.PROMO_BLOCKING_STATUSES
+      },
+      time: Utilities.formatDate(new Date(), CONFIG.TIME_ZONE, "yyyy-MM-dd HH:mm:ss")
+    }, callback);
+  } catch (error) {
+    return webOutput_({
+      status: "error",
+      connected: false,
+      message: errorMessage_(error),
+      version: CONFIG.APP_VERSION
+    }, callback);
+  }
 }
 
 function doPost(e) {
@@ -183,7 +218,7 @@ function setupNutrisme() {
 
   var result = {
     status: "ok",
-    spreadsheet: SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getName(),
+    spreadsheet: getSpreadsheet_().getName(),
     sheet: sheet.getName(),
     columns: HEADERS.length,
     emailQuota: MailApp.getRemainingDailyQuota(),
@@ -246,6 +281,21 @@ function testHeroLeadNutrisme() {
 
 function tesKoneksi() {
   return setupNutrisme();
+}
+
+function testConnectionNutrisme() {
+  var spreadsheet = getSpreadsheet_();
+  var sheet = getOrCreateSheet_();
+  var result = {
+    status: "ok",
+    spreadsheet: spreadsheet.getName(),
+    spreadsheetId: spreadsheet.getId(),
+    sheet: sheet.getName(),
+    lastRow: sheet.getLastRow(),
+    version: CONFIG.APP_VERSION
+  };
+  console.log(JSON.stringify(result));
+  return result;
 }
 
 function readPayload_(e) {
@@ -441,16 +491,77 @@ function getHeaderMap_(sheet) {
   return map;
 }
 
-function getOrCreateSheet_() {
-  if (!CONFIG.SPREADSHEET_ID || CONFIG.SPREADSHEET_ID.indexOf("GANTI_") === 0) {
-    throw new Error("SPREADSHEET_ID belum diisi.");
+function getSpreadsheet_() {
+  var configuredId = cleanText_(CONFIG.SPREADSHEET_ID, 180);
+  var configuredError = null;
+
+  if (configuredId && configuredId.indexOf("GANTI_") !== 0) {
+    try {
+      return SpreadsheetApp.openById(configuredId);
+    } catch (error) {
+      configuredError = error;
+    }
   }
 
-  var spreadsheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (activeSpreadsheet) return activeSpreadsheet;
+
+  if (configuredError) {
+    throw new Error("Spreadsheet tidak dapat dibuka. Periksa SPREADSHEET_ID dan izin akun Apps Script. Detail: " + errorMessage_(configuredError));
+  }
+
+  throw new Error("SPREADSHEET_ID belum diisi dan project Apps Script tidak terikat ke Spreadsheet.");
+}
+
+function ensureSheetSchema_(sheet) {
+  var existingWidth = Math.max(sheet.getLastColumn(), 1);
+  var existingHeaders = sheet.getRange(1, 1, 1, existingWidth).getDisplayValues()[0]
+    .map(function(value) { return String(value || "").trim(); });
+  var hasExistingHeaders = existingHeaders.some(function(value) { return value !== ""; });
+  var schemaMatches = HEADERS.every(function(header, index) {
+    return existingHeaders[index] === header;
+  });
+
+  if (hasExistingHeaders && !schemaMatches) {
+    var oldHeaderMap = {};
+    existingHeaders.forEach(function(header, index) {
+      if (header) oldHeaderMap[header] = index;
+    });
+
+    var rowCount = Math.max(sheet.getLastRow() - 1, 0);
+    var oldRows = rowCount > 0
+      ? sheet.getRange(2, 1, rowCount, existingWidth).getValues()
+      : [];
+
+    var migratedRows = oldRows.map(function(row, rowIndex) {
+      return HEADERS.map(function(header) {
+        if (Object.prototype.hasOwnProperty.call(oldHeaderMap, header)) {
+          return row[oldHeaderMap[header]];
+        }
+        if (header === "No") return rowIndex + 1;
+        if (header === "Status Pelanggan") return "LEAD";
+        if (header === "Promo Eligible") return "BELUM DIVERIFIKASI";
+        return "";
+      });
+    });
+
+    sheet.clearContents();
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    if (migratedRows.length > 0) {
+      sheet.getRange(2, 1, migratedRows.length, HEADERS.length).setValues(migratedRows);
+    }
+  } else {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  }
+}
+
+function getOrCreateSheet_() {
+  var spreadsheet = getSpreadsheet_();
   var sheet = spreadsheet.getSheetByName(CONFIG.SHEET_NAME);
   if (!sheet) sheet = spreadsheet.insertSheet(CONFIG.SHEET_NAME);
 
-  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  ensureSheetSchema_(sheet);
+
   var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
   headerRange.setBackground("#07563f");
   headerRange.setFontColor("#ffffff");
@@ -516,6 +627,19 @@ function errorMessage_(error) {
   return error && error.message ? error.message : String(error || "Unknown error");
 }
 
+function webOutput_(payload, callback) {
+  var json = JSON.stringify(payload);
+  var safeCallback = String(callback || "").trim();
+
+  if (safeCallback && /^[A-Za-z_$][0-9A-Za-z_$]*(?:\.[A-Za-z_$][0-9A-Za-z_$]*)*$/.test(safeCallback)) {
+    return ContentService
+      .createTextOutput(safeCallback + "(" + json + ");")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
+}
+
 function jsonOutput_(payload) {
-  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
+  return webOutput_(payload, "");
 }
