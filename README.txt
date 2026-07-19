@@ -1,4 +1,4 @@
-NUTRISME LANDING PAGE - BUILD 2026-07-19-14
+NUTRISME LANDING PAGE - BUILD 2026-07-19-15
 ============================================
 
 RINGKASAN PERUBAHAN
@@ -221,7 +221,7 @@ BUILD 2026-07-19-12
 - Tombol tidak lagi membuka form berlangganan modal.
 
 
-BUILD 2026-07-19-14 — PERBAIKAN KONEKSI GOOGLE SHEETS
+BUILD 2026-07-19-15 — PERBAIKAN KONEKSI GOOGLE SHEETS
 -----------------------------------------------------
 1. Front-end tidak lagi memakai fetch mode no-cors yang sebelumnya dapat
    menampilkan pesan sukses walaupun Apps Script gagal menulis data.
@@ -239,7 +239,7 @@ BUILD 2026-07-19-14 — PERBAIKAN KONEKSI GOOGLE SHEETS
 
 DEPLOYMENT WAJIB
 ----------------
-- Tempel seluruh apps-script.gs build 2026-07-19-14 ke project Apps Script.
+- Tempel seluruh apps-script.gs build 2026-07-19-15 ke project Apps Script.
 - Jalankan setupNutrisme(), lalu testConnectionNutrisme(), kemudian
   testHeroLeadNutrisme(). Pastikan baris uji muncul pada tab Order.
 - Deploy > Manage deployments > Edit > New version.
@@ -249,10 +249,10 @@ DEPLOYMENT WAJIB
   meta nutrisme-apps-script-url di index.html.
 - Buka URL berikut dalam incognito:
   /exec?action=health
-  Respons harus memuat status ok, connected true, dan version 2026-07-19-14.
+  Respons harus memuat status ok, connected true, dan version 2026-07-19-15.
 
 
-BUILD 2026-07-19-14 — NOTIFIKASI EMAIL ORDER
+BUILD 2026-07-19-15 — NOTIFIKASI EMAIL ORDER
 ---------------------------------------------
 1. Setiap HERO_LEAD dan FULL_SUBSCRIPTION yang berhasil tersimpan mengirim
    notifikasi ke nutrisme.indonesia@gmail.com.
@@ -264,4 +264,12 @@ BUILD 2026-07-19-14 — NOTIFIKASI EMAIL ORDER
 5. Fungsi testNotificationEmailNutrisme() ditambahkan untuk meminta izin
    MailApp sekaligus menguji pengiriman email.
 6. Kegagalan email tidak menghapus order; status kegagalan tetap dicatat di Sheet.
+
+BUILD 2026-07-19-15 — RESET FORM SETELAH BERHASIL
+--------------------------------------------------
+- Setelah data form lengkap terkonfirmasi masuk ke Spreadsheet, pop-up Terima kasih ditampilkan.
+- Seluruh field form lengkap langsung dikosongkan, termasuk paket dan persetujuan Privacy Policy.
+- Form Hero tetap dikosongkan setelah lead berhasil tersimpan.
+- Jika pengguna menekan Pesan Lagi atau membuka form kembali, tidak ada data lama yang tertinggal.
+- Field tidak dikosongkan bila pengiriman gagal, agar pengguna tidak perlu mengetik ulang data.
 

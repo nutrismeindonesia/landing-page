@@ -1,5 +1,5 @@
 // Nutrisme - Google Apps Script backend
-// Build 2026-07-19-14
+// Build 2026-07-19-15
 // Paste this file into the Apps Script project, save it, run setupNutrisme(),
 // then deploy a new web-app version.
 
@@ -11,7 +11,7 @@ var CONFIG = {
   SEND_EMAIL_FOR_HERO_LEAD: true,
   SEND_EMAIL_FOR_FULL_SUBSCRIPTION: true,
   TIME_ZONE: "Asia/Jakarta",
-  APP_VERSION: "2026-07-19-14",
+  APP_VERSION: "2026-07-19-15",
   SEND_EMAIL: true,
   NEW_CUSTOMER_DISCOUNT: 100000,
   PROMO_BLOCKING_STATUSES: ["PAID", "ACTIVE"],

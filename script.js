@@ -1,4 +1,4 @@
-const NUTRISME_BUILD = "2026-07-19-14";
+const NUTRISME_BUILD = "2026-07-19-15";
 
 const TRANSLATIONS = {
   id: {
@@ -550,15 +550,20 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStatusText();
   };
 
-  const resetOrderForm = ({ focus = false } = {}) => {
+  const clearOrderFields = () => {
     form.reset();
     selectedPlan.selectedIndex = 0;
     Object.values(fields).forEach((field) => field.classList.remove("invalid", "valid"));
     submit.removeAttribute("aria-busy");
+    status.textContent = "";
+    update();
+  };
+
+  const resetOrderForm = ({ focus = false } = {}) => {
+    clearOrderFields();
     success.hidden = true;
     formView.hidden = false;
     dialog.scrollTop = 0;
-    update();
 
     if (focus && modal.classList.contains("open")) {
       window.setTimeout(() => fullName.focus(), 0);
@@ -928,6 +933,9 @@ document.addEventListener("DOMContentLoaded", () => {
         website: website.value.trim()
       });
 
+      // Kosongkan seluruh field hanya setelah data terkonfirmasi tersimpan.
+      // Tampilan sukses tetap terlihat, dan saat form dibuka kembali semua input sudah bersih.
+      clearOrderFields();
       showSuccess("full");
     } catch (error) {
       console.error("Subscription gagal tersimpan:", error);
