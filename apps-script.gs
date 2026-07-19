@@ -4,7 +4,7 @@
 // then deploy a new web-app version.
 
 var CONFIG = {
-  SPREADSHEET_ID: "1qy4hSkdrHZZXTSdwcZJNLyu-ffRtQiXA58PmHHaNqhc",
+  SPREADSHEET_ID: "1rhOPKMv0HSPlpb_Gl4RpNKdxRd0Y6_qFaTZbMfg8bl0",
   SHEET_NAME: "Order",
   NOTIFICATION_EMAILS: ["nutrisme.indonesia@gmail.com"],
   EMAIL_SENDER_NAME: "Nutrisme Indonesia",
