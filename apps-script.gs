@@ -1,14 +1,17 @@
 // Nutrisme - Google Apps Script backend
-// Build 2026-07-19-13
+// Build 2026-07-19-14
 // Paste this file into the Apps Script project, save it, run setupNutrisme(),
 // then deploy a new web-app version.
 
 var CONFIG = {
   SPREADSHEET_ID: "1qy4hSkdrHZZXTSdwcZJNLyu-ffRtQiXA58PmHHaNqhc",
   SHEET_NAME: "Order",
-  NOTIFICATION_EMAIL: "nutrisme.indonesia@gmail.com",
+  NOTIFICATION_EMAILS: ["nutrisme.indonesia@gmail.com"],
+  EMAIL_SENDER_NAME: "Nutrisme Indonesia",
+  SEND_EMAIL_FOR_HERO_LEAD: true,
+  SEND_EMAIL_FOR_FULL_SUBSCRIPTION: true,
   TIME_ZONE: "Asia/Jakarta",
-  APP_VERSION: "2026-07-19-13",
+  APP_VERSION: "2026-07-19-14",
   SEND_EMAIL: true,
   NEW_CUSTOMER_DISCOUNT: 100000,
   PROMO_BLOCKING_STATUSES: ["PAID", "ACTIVE"],
@@ -37,7 +40,9 @@ var HEADERS = [
   "Bahasa",
   "Request ID",
   "Sumber",
-  "Waktu Klien"
+  "Waktu Klien",
+  "Email Notification",
+  "Email Sent At"
 ];
 
 function doGet(e) {
@@ -155,7 +160,9 @@ function doPost(e) {
       order.language,
       order.requestId,
       safeSheetText_(order.source),
-      safeSheetText_(order.clientTime)
+      safeSheetText_(order.clientTime),
+      shouldSendNotification_(order) ? "PENDING" : "DISABLED",
+      ""
     ]]);
 
     sheet.getRange(nextRow, 2).setNumberFormat("dd/MM/yyyy HH:mm:ss");
@@ -166,15 +173,19 @@ function doPost(e) {
     lock.releaseLock();
     lock = null;
 
-    var emailStatus = "not-sent";
-    if (CONFIG.SEND_EMAIL && CONFIG.NOTIFICATION_EMAIL) {
+    var emailStatus = "disabled";
+    if (shouldSendNotification_(order)) {
       try {
         sendNotificationEmail_(order, promo, orderNumber);
         emailStatus = "sent";
+        updateEmailStatus_(sheet, nextRow, "SENT", new Date());
       } catch (mailError) {
         emailStatus = "failed";
+        updateEmailStatus_(sheet, nextRow, "FAILED: " + cleanText_(errorMessage_(mailError), 220), "");
         console.error("Email notification failed: " + errorMessage_(mailError));
       }
+    } else {
+      updateEmailStatus_(sheet, nextRow, "DISABLED", "");
     }
 
     return jsonOutput_({
@@ -215,16 +226,65 @@ function setupNutrisme() {
   sheet.setColumnWidth(5, 320);
   sheet.setColumnWidth(13, 280);
   sheet.setColumnWidth(16, 260);
+  sheet.setColumnWidth(18, 250);
+  sheet.setColumnWidth(19, 165);
 
   var result = {
     status: "ok",
     spreadsheet: getSpreadsheet_().getName(),
     sheet: sheet.getName(),
     columns: HEADERS.length,
+    emailRecipients: getNotificationRecipients_(),
     emailQuota: MailApp.getRemainingDailyQuota(),
     version: CONFIG.APP_VERSION
   };
 
+  console.log(JSON.stringify(result));
+  return result;
+}
+
+// Run once from the Apps Script editor to authorize MailApp and verify delivery.
+function testNotificationEmailNutrisme() {
+  var recipients = getNotificationRecipients_();
+  if (!recipients.length) throw new Error("Email penerima notifikasi belum dikonfigurasi.");
+
+  var quota = MailApp.getRemainingDailyQuota();
+  if (quota < recipients.length) {
+    throw new Error("Kuota email harian tidak mencukupi. Sisa kuota: " + quota);
+  }
+
+  var now = new Date();
+  var subject = "Tes Notifikasi Order Nutrisme - " + Utilities.formatDate(now, CONFIG.TIME_ZONE, "dd/MM/yyyy HH:mm:ss");
+  var spreadsheetUrl = getSpreadsheet_().getUrl();
+  var body =
+    "Halo Tim Nutrisme,\n\n" +
+    "Email ini adalah tes notifikasi order dari Google Apps Script Nutrisme.\n" +
+    "Jika email ini diterima, izin MailApp dan alamat penerima sudah benar.\n\n" +
+    "Spreadsheet: " + spreadsheetUrl + "\n" +
+    "Versi backend: " + CONFIG.APP_VERSION + "\n\n" +
+    "- Sistem Nutrisme";
+
+  MailApp.sendEmail({
+    to: recipients.join(","),
+    subject: subject,
+    body: body,
+    htmlBody:
+      '<div style="font-family:Arial,sans-serif;color:#18342d;line-height:1.6">' +
+      '<h2 style="color:#07563f;margin:0 0 12px">Tes Notifikasi Order Nutrisme</h2>' +
+      '<p>Email ini adalah tes notifikasi order dari Google Apps Script Nutrisme.</p>' +
+      '<p>Jika email ini diterima, izin MailApp dan alamat penerima sudah benar.</p>' +
+      '<p><a href="' + htmlEscape_(spreadsheetUrl) + '" style="color:#07563f;font-weight:700">Buka Spreadsheet Nutrisme</a></p>' +
+      '<p style="font-size:12px;color:#64766f">Versi backend: ' + htmlEscape_(CONFIG.APP_VERSION) + '</p>' +
+      '</div>',
+    name: CONFIG.EMAIL_SENDER_NAME
+  });
+
+  var result = {
+    status: "ok",
+    recipients: recipients,
+    remainingQuota: MailApp.getRemainingDailyQuota(),
+    version: CONFIG.APP_VERSION
+  };
   console.log(JSON.stringify(result));
   return result;
 }
@@ -579,16 +639,54 @@ function getOrCreateSheet_() {
   return sheet;
 }
 
+function getNotificationRecipients_() {
+  var values = CONFIG.NOTIFICATION_EMAILS || [];
+  if (!Array.isArray(values)) values = [values];
+
+  return values
+    .map(function(value) { return cleanText_(value, 180).toLowerCase(); })
+    .filter(function(value, index, array) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && array.indexOf(value) === index;
+    });
+}
+
+function shouldSendNotification_(order) {
+  if (!CONFIG.SEND_EMAIL || !getNotificationRecipients_().length) return false;
+  if (order.type === "HERO_LEAD") return CONFIG.SEND_EMAIL_FOR_HERO_LEAD !== false;
+  return CONFIG.SEND_EMAIL_FOR_FULL_SUBSCRIPTION !== false;
+}
+
+function updateEmailStatus_(sheet, rowNumber, status, sentAt) {
+  var headerMap = getHeaderMap_(sheet);
+  var statusColumn = headerMap["Email Notification"];
+  var timeColumn = headerMap["Email Sent At"];
+
+  if (statusColumn) sheet.getRange(rowNumber, statusColumn).setValue(status);
+  if (timeColumn) {
+    var cell = sheet.getRange(rowNumber, timeColumn);
+    cell.setValue(sentAt || "");
+    if (sentAt) cell.setNumberFormat("dd/MM/yyyy HH:mm:ss");
+  }
+  SpreadsheetApp.flush();
+}
+
 function sendNotificationEmail_(order, promo, orderNumber) {
+  var recipients = getNotificationRecipients_();
+  if (!recipients.length) throw new Error("Email penerima notifikasi belum dikonfigurasi.");
+
+  var quota = MailApp.getRemainingDailyQuota();
+  if (quota < recipients.length) {
+    throw new Error("Kuota email harian tidak mencukupi. Sisa kuota: " + quota);
+  }
+
   var isHeroLead = order.type === "HERO_LEAD";
-  var subject = (isHeroLead ? "Lead Hero Baru #" : "Langganan Baru #") + orderNumber + " - " + order.name;
-  var body =
-    "Halo Tim Nutrisme,\n\n" +
-    (isHeroLead
-      ? "Ada calon pelanggan yang mengisi form singkat di Hero.\n\n"
-      : "Ada permintaan langganan baru. Berikut detailnya:\n\n") +
+  var formattedTime = Utilities.formatDate(order.createdAt, CONFIG.TIME_ZONE, "dd/MM/yyyy HH:mm:ss");
+  var subject = (isHeroLead ? "Lead Hero Baru #" : "Order Langganan Baru #") + orderNumber + " - " + order.name;
+  var spreadsheetUrl = getSpreadsheet_().getUrl();
+
+  var plainDetails =
     "No. Permintaan : #" + orderNumber + "\n" +
-    "Waktu          : " + Utilities.formatDate(order.createdAt, CONFIG.TIME_ZONE, "dd/MM/yyyy HH:mm:ss") + "\n" +
+    "Waktu          : " + formattedTime + "\n" +
     "Jenis Form     : " + (isHeroLead ? "HERO LEAD" : "FULL SUBSCRIPTION") + "\n" +
     "Nama           : " + order.name + "\n" +
     "Instagram      : " + order.instagram + "\n" +
@@ -605,18 +703,90 @@ function sendNotificationEmail_(order, promo, orderNumber) {
         "Alasan Promo   : " + promo.reason + "\n") +
     "Bahasa         : " + order.language.toUpperCase() + "\n" +
     "ID Request     : " + order.requestId + "\n" +
-    "Sumber         : " + order.source + "\n\n" +
+    "Sumber         : " + order.source + "\n";
+
+  var body =
+    "Halo Tim Nutrisme,\n\n" +
+    (isHeroLead
+      ? "Ada calon pelanggan yang mengisi form singkat di Hero.\n\n"
+      : "Ada order langganan baru. Berikut detailnya:\n\n") +
+    plainDetails + "\n" +
+    "Buka Spreadsheet: " + spreadsheetUrl + "\n\n" +
     (isHeroLead
       ? "Hubungi calon pelanggan melalui Instagram untuk meminta detail berikutnya.\n\n"
-      : "Ubah kolom Status Pelanggan menjadi PAID setelah pembayaran pertama diterima, atau ACTIVE ketika langganan aktif.\n\n") +
+      : "Ubah Status Pelanggan menjadi PAID setelah pembayaran pertama diterima, atau ACTIVE ketika langganan aktif.\n\n") +
     "- Sistem Nutrisme";
 
+  var htmlRows = [
+    ["No. Permintaan", "#" + orderNumber],
+    ["Waktu", formattedTime],
+    ["Jenis Form", isHeroLead ? "HERO LEAD" : "FULL SUBSCRIPTION"],
+    ["Nama", order.name],
+    ["Instagram", order.instagram]
+  ];
+
+  if (isHeroLead) {
+    htmlRows.push(["Status", "LEAD"]);
+    htmlRows.push(["Promo", "Belum diverifikasi"]);
+  } else {
+    htmlRows.push(["Alamat", order.address]);
+    htmlRows.push(["No. Handphone", order.phone]);
+    htmlRows.push(["Paket", order.plan]);
+    htmlRows.push(["Status", "LEAD"]);
+    htmlRows.push(["Promo Eligible", promo.eligible ? "YA" : "TIDAK"]);
+    htmlRows.push(["Diskon", formatRupiah_(promo.discount)]);
+    htmlRows.push(["Harga Bulan Pertama", formatRupiah_(promo.firstMonthPrice)]);
+    htmlRows.push(["Harga Normal", formatRupiah_(promo.normalPrice) + "/bulan"]);
+    htmlRows.push(["Alasan Promo", promo.reason]);
+  }
+
+  htmlRows.push(["Bahasa", order.language.toUpperCase()]);
+  htmlRows.push(["ID Request", order.requestId]);
+  htmlRows.push(["Sumber", order.source]);
+
+  var tableHtml = htmlRows.map(function(row) {
+    return '<tr>' +
+      '<td style="padding:8px 10px;border-bottom:1px solid #e6eee9;color:#64766f;vertical-align:top;white-space:nowrap">' + htmlEscape_(row[0]) + '</td>' +
+      '<td style="padding:8px 10px;border-bottom:1px solid #e6eee9;color:#18342d;font-weight:600">' + htmlEscape_(row[1]) + '</td>' +
+      '</tr>';
+  }).join("");
+
+  var htmlBody =
+    '<div style="font-family:Arial,sans-serif;color:#18342d;line-height:1.6;max-width:680px;margin:0 auto">' +
+      '<div style="background:#07563f;color:#fff;padding:20px 24px;border-radius:14px 14px 0 0">' +
+        '<div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.82">Nutrisme Indonesia</div>' +
+        '<h2 style="margin:5px 0 0;font-size:22px">' + htmlEscape_(isHeroLead ? "Lead Hero Baru" : "Order Langganan Baru") + '</h2>' +
+      '</div>' +
+      '<div style="border:1px solid #dce8e1;border-top:0;padding:22px 24px;border-radius:0 0 14px 14px;background:#fff">' +
+        '<p style="margin:0 0 16px">' + htmlEscape_(isHeroLead
+          ? "Ada calon pelanggan yang mengisi form singkat di Hero."
+          : "Ada order langganan baru. Berikut detailnya:") + '</p>' +
+        '<table role="presentation" style="width:100%;border-collapse:collapse;font-size:14px">' + tableHtml + '</table>' +
+        '<p style="margin:20px 0 0">' +
+          '<a href="' + htmlEscape_(spreadsheetUrl) + '" style="display:inline-block;background:#f28a3b;color:#fff;text-decoration:none;font-weight:700;padding:11px 18px;border-radius:999px">Buka Spreadsheet</a>' +
+        '</p>' +
+        '<p style="margin:18px 0 0;color:#64766f;font-size:13px">' + htmlEscape_(isHeroLead
+          ? "Hubungi calon pelanggan melalui Instagram untuk meminta detail berikutnya."
+          : "Ubah Status Pelanggan menjadi PAID setelah pembayaran pertama diterima, atau ACTIVE ketika langganan aktif.") + '</p>' +
+      '</div>' +
+    '</div>';
+
   MailApp.sendEmail({
-    to: CONFIG.NOTIFICATION_EMAIL,
+    to: recipients.join(","),
     subject: subject,
     body: body,
-    name: "Nutrisme Subscription"
+    htmlBody: htmlBody,
+    name: CONFIG.EMAIL_SENDER_NAME
   });
+}
+
+function htmlEscape_(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function formatRupiah_(amount) {

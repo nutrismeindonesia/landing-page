@@ -1,9 +1,9 @@
-NUTRISME - CHECKLIST KONEKSI GOOGLE SHEETS (BUILD 2026-07-19-13)
+NUTRISME - CHECKLIST KONEKSI GOOGLE SHEETS (BUILD 2026-07-19-14)
 ================================================================
 
 A. DI GOOGLE APPS SCRIPT
 [ ] Buka project Apps Script yang terhubung dengan Spreadsheet Nutrisme.
-[ ] Hapus kode lama, lalu tempel seluruh isi apps-script.gs build 2026-07-19-13.
+[ ] Hapus kode lama, lalu tempel seluruh isi apps-script.gs build 2026-07-19-14.
 [ ] Pastikan CONFIG.SPREADSHEET_ID sesuai dengan ID Spreadsheet Nutrisme.
 [ ] Save.
 [ ] Jalankan setupNutrisme() dan izinkan akses yang diminta.
@@ -28,7 +28,7 @@ Buka URL berikut di incognito:
 Hasil yang benar memuat:
 - "status":"ok"
 - "connected":true
-- "version":"2026-07-19-13"
+- "version":"2026-07-19-14"
 
 D. TES FORM
 [ ] Isi Nama Lengkap dan Username Instagram di Hero.
@@ -42,3 +42,14 @@ Jika form menampilkan pesan "belum terhubung", penyebabnya hampir selalu salah s
 - akses web app bukan Anyone;
 - URL /exec di index.html bukan deployment yang aktif;
 - SPREADSHEET_ID salah atau akun Apps Script tidak memiliki akses ke Spreadsheet.
+
+E. AKTIFKAN DAN TES NOTIFIKASI EMAIL (BUILD 2026-07-19-14)
+[ ] Pastikan CONFIG.NOTIFICATION_EMAILS berisi nutrisme.indonesia@gmail.com.
+[ ] Jalankan testNotificationEmailNutrisme() dari Apps Script editor.
+[ ] Berikan izin MailApp ketika diminta.
+[ ] Pastikan email tes diterima, termasuk folder Spam/Promotions.
+[ ] Deploy ulang sebagai New version setelah kode disimpan.
+[ ] Kirim satu form Hero dan satu order lengkap.
+[ ] Pastikan kolom Email Notification bernilai SENT dan Email Sent At terisi.
+[ ] Jika bernilai FAILED, baca pesan error pada kolom Email Notification.
+

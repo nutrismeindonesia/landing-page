@@ -1,4 +1,4 @@
-NUTRISME LANDING PAGE - BUILD 2026-07-19-13
+NUTRISME LANDING PAGE - BUILD 2026-07-19-14
 ============================================
 
 RINGKASAN PERUBAHAN
@@ -221,7 +221,7 @@ BUILD 2026-07-19-12
 - Tombol tidak lagi membuka form berlangganan modal.
 
 
-BUILD 2026-07-19-13 — PERBAIKAN KONEKSI GOOGLE SHEETS
+BUILD 2026-07-19-14 — PERBAIKAN KONEKSI GOOGLE SHEETS
 -----------------------------------------------------
 1. Front-end tidak lagi memakai fetch mode no-cors yang sebelumnya dapat
    menampilkan pesan sukses walaupun Apps Script gagal menulis data.
@@ -239,7 +239,7 @@ BUILD 2026-07-19-13 — PERBAIKAN KONEKSI GOOGLE SHEETS
 
 DEPLOYMENT WAJIB
 ----------------
-- Tempel seluruh apps-script.gs build 2026-07-19-13 ke project Apps Script.
+- Tempel seluruh apps-script.gs build 2026-07-19-14 ke project Apps Script.
 - Jalankan setupNutrisme(), lalu testConnectionNutrisme(), kemudian
   testHeroLeadNutrisme(). Pastikan baris uji muncul pada tab Order.
 - Deploy > Manage deployments > Edit > New version.
@@ -249,4 +249,19 @@ DEPLOYMENT WAJIB
   meta nutrisme-apps-script-url di index.html.
 - Buka URL berikut dalam incognito:
   /exec?action=health
-  Respons harus memuat status ok, connected true, dan version 2026-07-19-13.
+  Respons harus memuat status ok, connected true, dan version 2026-07-19-14.
+
+
+BUILD 2026-07-19-14 — NOTIFIKASI EMAIL ORDER
+---------------------------------------------
+1. Setiap HERO_LEAD dan FULL_SUBSCRIPTION yang berhasil tersimpan mengirim
+   notifikasi ke nutrisme.indonesia@gmail.com.
+2. Email dikirim setelah baris benar-benar ditulis ke Spreadsheet.
+3. Email berisi detail pelanggan, paket, promo, Request ID, dan tombol untuk
+   membuka Spreadsheet Nutrisme.
+4. Sheet memiliki kolom Email Notification dan Email Sent At untuk melihat
+   status SENT, FAILED, atau DISABLED.
+5. Fungsi testNotificationEmailNutrisme() ditambahkan untuk meminta izin
+   MailApp sekaligus menguji pengiriman email.
+6. Kegagalan email tidak menghapus order; status kegagalan tetap dicatat di Sheet.
+
