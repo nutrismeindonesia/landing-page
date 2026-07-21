@@ -1,5 +1,5 @@
 // Nutrisme - Google Apps Script backend
-// Build 2026-07-21-19
+// Build 2026-07-21-20
 // Active form: short Hero form only.
 
 var CONFIG = {
@@ -9,7 +9,7 @@ var CONFIG = {
   NOTIFICATION_EMAIL: "nutrismeindonesia@gmail.com",
   EMAIL_SENDER_NAME: "Nutrisme Indonesia",
   TIME_ZONE: "Asia/Jakarta",
-  APP_VERSION: "2026-07-21-19"
+  APP_VERSION: "2026-07-21-20"
 };
 
 var HEADERS = [
@@ -145,6 +145,7 @@ function testHeroLeadNutrisme() {
       action: "createHeroLead",
       nama: "TEST NUTRISME",
       instagram: "nutrisme.test",
+      consent: "yes",
       website: ""
     }
   });
@@ -169,6 +170,7 @@ function testNotificationEmailNutrisme() {
 function validateHeroLead_(data) {
   var name = cleanText_(data.nama, 100);
   var instagram = normalizeInstagram_(data.instagram);
+  var consent = cleanText_(data.consent, 10).toLowerCase();
 
   if (name.length < 3) {
     throw new Error("Nama lengkap minimal 3 karakter.");
@@ -176,6 +178,10 @@ function validateHeroLead_(data) {
 
   if (!/^[A-Za-z0-9._]{2,50}$/.test(instagram)) {
     throw new Error("Username Instagram tidak valid.");
+  }
+
+  if (consent !== "yes") {
+    throw new Error("Persetujuan Privacy Policy wajib diberikan.");
   }
 
   return {

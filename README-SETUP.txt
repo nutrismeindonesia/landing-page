@@ -1,5 +1,5 @@
 NUTRISME - LANGKAH KONEKSI GITHUB KE GOOGLE SHEETS
-Build: 2026-07-21-19
+Build: 2026-07-21-20
 
 A. SIAPKAN GOOGLE APPS SCRIPT
 1. Buka Google Spreadsheet dengan ID:
@@ -48,18 +48,21 @@ D. PASTIKAN GITHUB PAGES SUDAH MEMAKAI FILE TERBARU
 4. Lakukan hard refresh:
    Windows: Ctrl + Shift + R
    Mac: Command + Shift + R
-5. View page source, lalu cari "2026-07-21-19".
+5. View page source, lalu cari "2026-07-21-20".
    Jika ditemukan, file terbaru sudah aktif.
 
 E. TES FORM DARI WEBSITE
 1. Isi Nama Lengkap dan Username Instagram.
-2. Klik Submit.
-3. Pop-up Terima kasih muncul langsung tanpa menunggu Google Sheets.
-4. Tunggu beberapa detik, lalu cek tab Order di Spreadsheet.
-5. Data harus masuk ke lima kolom berikut saja:
+2. Centang checkbox persetujuan Privacy Policy.
+3. Klik Submit.
+4. Pop-up Terima kasih muncul langsung tanpa menunggu Google Sheets.
+5. Tunggu beberapa detik, lalu cek tab Order di Spreadsheet.
+6. Data harus masuk ke lima kolom berikut saja:
    No | Tanggal | Jam | Nama Lengkap | Username Instagram
 
 CATATAN PENTING
 - Pop-up sekarang muncul segera setelah browser mengirim request. Pop-up bukan bukti bahwa Google Sheets berhasil menulis data.
 - Jika pop-up muncul tetapi data tidak masuk, periksa Apps Script > Executions untuk melihat error backend.
 - Jika deployment baru dibuat (bukan Edit deployment lama), URL /exec biasanya berubah dan wajib diperbarui di index.html.
+
+- Checkbox Privacy Policy wajib dicentang, tetapi nilainya hanya divalidasi dan tidak disimpan sebagai kolom Spreadsheet.

@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07563f">
-  <meta name="nutrisme-build" content="2026-07-21-19">
-  <meta name="nutrisme-apps-script-url" content="https://script.google.com/macros/s/AKfycbw_s5tVPnAdL40dTvAlDaKbe0hHwHrUevlHvWjIlTdlC3t02jR-7Dvn_4QbhjSCjcPx/exec">
+  <meta name="nutrisme-build" content="2026-07-21-20">
+  <meta name="nutrisme-apps-script-url" content="https://script.google.com/macros/s/AKfycbxN0ZfvGFX1RPp8pFj4Afxk1Q3JECumWYuaZYel8PY-Fc4OvleOvyzHSq_Ljr1sx69X/exec">
   <meta name="description" content="Nutrisme menghadirkan paket makanan sehat dengan nutrisi transparan, pilihan fleksibel, dan promo pelanggan baru.">
   <title>Nutrisme — Makan Sehat, Sesuai Caramu</title>
   <link rel="icon" type="image/png" href="assets/nutrisme-mark.png">
-  <link rel="stylesheet" href="style.css?v=20260721-19">
+  <link rel="stylesheet" href="style.css?v=20260721-20">
 </head>
 <body>
   <a class="skip-link" href="#main-content" data-i18n="access.skip">Lewati ke konten utama</a>
@@ -104,6 +104,14 @@
             </div>
 
             <input id="heroWebsite" name="heroWebsite" type="text" tabindex="-1" autocomplete="off" class="honeypot">
+
+            <div class="hero-consent" data-hero-field="heroConsent">
+              <input id="heroConsent" name="heroConsent" type="checkbox" required>
+              <div>
+                <label for="heroConsent" data-i18n="form.consent">Saya telah membaca dan menyetujui</label>
+                <button class="privacy-link" type="button" data-open-privacy aria-haspopup="dialog" aria-controls="privacyModal" data-i18n="privacy.link">Privacy Policy</button><span aria-hidden="true">.</span>
+              </div>
+            </div>
 
             <button class="btn btn-primary hero-submit" id="heroSubmit" type="submit" disabled data-i18n="hero.submit">Submit</button>
             <p class="hero-form-status" id="heroFormStatus" aria-live="polite"></p>
@@ -359,6 +367,6 @@
     </section>
   </div>
 
-  <script src="script.js?v=20260721-19" defer></script>
+  <script src="script.js?v=20260721-20" defer></script>
 </body>
 </html>
