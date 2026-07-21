@@ -1,15 +1,15 @@
 // Nutrisme - Google Apps Script backend
-// Build 2026-07-21-21
+// Build 2026-07-21-23
 // Active form: short Hero form only.
 
 var CONFIG = {
   SPREADSHEET_ID: "1W84u1NlUBYCGrv80bsk9bp0-kt6uX8EcEz6uPju-_0M",
-  SPREADSHEET_NAME: "Order",
-  SHEET_NAME: "Order",
+  SPREADSHEET_NAME: "Nutrisme",
+  SHEET_NAME: "order",
   NOTIFICATION_EMAIL: "nutrismeindonesia@gmail.com",
   EMAIL_SENDER_NAME: "Nutrisme Indonesia",
   TIME_ZONE: "Asia/Jakarta",
-  APP_VERSION: "2026-07-21-21"
+  APP_VERSION: "2026-07-21-23"
 };
 
 var HEADERS = [
@@ -212,10 +212,14 @@ function getOrCreateSheetForSetup_() {
   var sheet = spreadsheet.getSheetByName(CONFIG.SHEET_NAME);
 
   if (!sheet) {
-    var legacy = spreadsheet.getSheetByName("Order Nutrisme");
-    if (legacy) {
-      legacy.setName(CONFIG.SHEET_NAME);
-      sheet = legacy;
+    var legacyNames = ["Order", "Order Nutrisme"];
+    for (var i = 0; i < legacyNames.length; i++) {
+      var legacy = spreadsheet.getSheetByName(legacyNames[i]);
+      if (legacy) {
+        legacy.setName(CONFIG.SHEET_NAME);
+        sheet = legacy;
+        break;
+      }
     }
   }
 
@@ -235,9 +239,13 @@ function getReadySheet_() {
   var spreadsheet = getSpreadsheet_();
   var sheet = spreadsheet.getSheetByName(CONFIG.SHEET_NAME);
 
+  // Self-healing backend: create the order sheet and repair its five-column
+  // schema automatically, so a missed setup step cannot silently block leads.
   if (!sheet) {
-    throw new Error('Sheet "Order" belum tersedia. Jalankan setupNutrisme() satu kali.');
+    sheet = spreadsheet.insertSheet(CONFIG.SHEET_NAME);
   }
+
+  ensureColumnCount_(sheet);
 
   var displayed = sheet.getRange(1, 1, 1, HEADERS.length).getDisplayValues()[0];
   var valid = HEADERS.every(function(header, index) {
@@ -245,7 +253,9 @@ function getReadySheet_() {
   });
 
   if (!valid) {
-    throw new Error("Struktur kolom belum sesuai. Jalankan setupNutrisme() satu kali.");
+    migrateSchema_(sheet);
+    formatSheet_(sheet);
+    SpreadsheetApp.flush();
   }
 
   return sheet;

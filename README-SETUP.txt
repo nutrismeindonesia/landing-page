@@ -1,5 +1,5 @@
-NUTRISME V21 - SETUP WAJIB
-Build: 2026-07-21-21
+NUTRISME V23 - SETUP WAJIB
+Build: 2026-07-21-23
 
 PENYEBAB YANG DITEMUKAN
 1. Domain live masih menampilkan landing page lama/form lengkap, bukan file v20.
@@ -13,7 +13,8 @@ PERBAIKAN V21
 - Popup muncul langsung. Teks popup berubah menjadi berhasil atau gagal setelah Apps Script merespons.
 - Backend mendukung doGet untuk createHeroLead dan doPost sebagai cadangan.
 - Spreadsheet ID: 1W84u1NlUBYCGrv80bsk9bp0-kt6uX8EcEz6uPju-_0M
-- Nama Spreadsheet dan tab: Order
+- Nama Spreadsheet: Nutrisme
+- Nama tab: order
 
 A. PASANG APPS SCRIPT
 1. Buka Spreadsheet target dengan akun Google yang memiliki akses Editor:
@@ -23,7 +24,7 @@ A. PASANG APPS SCRIPT
 4. Save.
 5. Pilih fungsi setupNutrisme, klik Run, dan izinkan akses.
 6. Pilih testHeroLeadNutrisme, klik Run.
-7. Pastikan tab Order mendapat satu baris TEST NUTRISME. Jika tes ini gagal, buka Executions dan lihat pesan error. Jangan lanjut ke GitHub sebelum tes manual berhasil.
+7. Pastikan tab order mendapat satu baris TEST NUTRISME. Jika tes ini gagal, buka Executions dan lihat pesan error. Jangan lanjut ke GitHub sebelum tes manual berhasil.
 
 B. DEPLOY WEB APP
 Pilihan yang paling aman: buat deployment baru.
@@ -35,9 +36,9 @@ Pilihan yang paling aman: buat deployment baru.
 6. Buka URL /exec di tab incognito. Harus tampil JSON dengan:
    connected=true
    spreadsheetId=1W84u1NlUBYCGrv80bsk9bp0-kt6uX8EcEz6uPju-_0M
-   spreadsheet=Order
-   sheet=Order
-   version=2026-07-21-21
+   spreadsheet=Nutrisme
+   sheet=order
+   version=2026-07-21-23
 7. Buka index.html. Ganti content pada meta nutrisme-apps-script-url dengan URL /exec baru. Jangan memakai URL lama jika berasal dari project/deployment berbeda.
 
 C. UPLOAD KE GITHUB
@@ -55,7 +56,7 @@ C. UPLOAD KE GITHUB
    Folder: / (root)
 4. Pastikan Custom domain: www.nutrisme.biz.id.
 5. Tunggu Actions/Pages selesai.
-6. Buka view-source:https://www.nutrisme.biz.id/ dan cari 2026-07-21-21.
+6. Buka view-source:https://www.nutrisme.biz.id/ dan cari 2026-07-21-23.
    Jika tidak ada, domain masih melayani branch/repository/folder yang salah.
 7. Hard refresh Ctrl+Shift+R.
 
@@ -65,7 +66,7 @@ D. TES LIVE
 3. Klik Submit.
 4. Popup langsung muncul.
 5. Dalam beberapa detik, teks popup harus berubah menjadi "Data Anda berhasil tercatat...".
-6. Cek tab Order dan Apps Script > Executions.
+6. Cek tab order dan Apps Script > Executions.
 
 CATATAN
 - apps-script.gs tidak di-upload ke GitHub.

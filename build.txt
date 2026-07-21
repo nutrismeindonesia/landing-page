@@ -1,0 +1,5 @@
+Nutrisme build 2026-07-21-23
+Expected active form: Nama Lengkap + Username Instagram + Privacy Policy checkbox
+Expected spreadsheet: Nutrisme
+Expected sheet: order
+Expected columns: No | Tanggal | Jam | Nama Lengkap | Username Instagram

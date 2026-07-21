@@ -1,4 +1,4 @@
-const NUTRISME_BUILD = "2026-07-21-21";
+const NUTRISME_BUILD = "2026-07-21-23";
 
 const TRANSLATIONS = {
   id: {
