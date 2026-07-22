@@ -1264,3 +1264,115 @@
 
 
 /* Build 2026-07-21-22: deployment and backend self-healing release. */
+
+/* Build 2026-07-22 FAQ: accessible native dropdowns before the final CTA. */
+.faq-section{
+  padding:68px 0;
+  background:#fff;
+}
+.faq-section .section-title{
+  max-width:850px;
+  margin-bottom:30px;
+}
+.faq-section .section-title h2{
+  font-size:clamp(2.45rem,4vw,4rem);
+}
+.faq-section .section-title p{
+  margin-top:13px;
+  font-size:1rem;
+}
+.faq-list{
+  width:min(980px,100%);
+  margin:0 auto;
+  display:grid;
+  gap:12px;
+}
+.faq-item{
+  overflow:hidden;
+  border:1px solid #e7e0d2;
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 10px 26px rgba(7,86,63,.055);
+}
+.faq-item summary{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 34px;
+  align-items:center;
+  gap:18px;
+  min-height:70px;
+  padding:18px 22px;
+  color:var(--green);
+  font-family:var(--serif);
+  font-size:1.16rem;
+  font-weight:700;
+  line-height:1.35;
+  list-style:none;
+  cursor:pointer;
+  transition:background .2s,color .2s;
+}
+.faq-item summary::-webkit-details-marker{
+  display:none;
+}
+.faq-item summary:after{
+  content:"+";
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  color:#fff;
+  background:linear-gradient(135deg,var(--green2),#00a486);
+  font-family:var(--sans);
+  font-size:1.35rem;
+  font-weight:500;
+  line-height:1;
+  box-shadow:0 7px 16px rgba(0,141,112,.18);
+}
+.faq-item[open] summary{
+  background:linear-gradient(135deg,#f2faf6,#fff8ef);
+}
+.faq-item[open] summary:after{
+  content:"−";
+}
+.faq-item summary:hover{
+  background:#f7fbf8;
+}
+.faq-item summary:focus-visible{
+  outline:3px solid rgba(0,141,112,.2);
+  outline-offset:-3px;
+}
+.faq-answer{
+  padding:0 22px 20px;
+  border-top:1px solid rgba(231,224,210,.72);
+}
+.faq-answer p{
+  max-width:860px;
+  padding-top:17px;
+  color:var(--muted);
+  font-size:.92rem;
+  line-height:1.65;
+}
+
+@media(max-width:680px){
+  .faq-section{padding:58px 0;}
+  .faq-section .section-title{margin-bottom:24px;}
+  .faq-section .section-title h2{font-size:2.55rem;}
+  .faq-list{gap:10px;}
+  .faq-item{border-radius:16px;}
+  .faq-item summary{
+    grid-template-columns:minmax(0,1fr) 30px;
+    gap:12px;
+    min-height:64px;
+    padding:16px;
+    font-size:1rem;
+  }
+  .faq-item summary:after{
+    width:30px;
+    height:30px;
+    font-size:1.18rem;
+  }
+  .faq-answer{padding:0 16px 17px;}
+  .faq-answer p{padding-top:14px;font-size:.84rem;line-height:1.6;}
+}
+
