@@ -35,7 +35,7 @@ const TRANSLATIONS = {
     "hero.statusFailed": "Data belum berhasil dikirim. Coba lagi.",
     "hero.statusTimeout": "Data belum terkonfirmasi di Spreadsheet. Periksa deployment Apps Script lalu coba lagi.",
     "hero.statusBackend": "Form belum terhubung ke Google Sheets. Periksa deployment Apps Script.",
-    "hero.title": "Makan Sehat.<br><span>Sesuai Caramu</span>",
+    "hero.title": "Makan Sehat,<br><span>Sesuai Caramu</span>",
     "hero.description": "Ketahui kandungan gula, garam, lemak, serat, kalori, dan protein di setiap menu. Pilih Fresh Meal, Ready-to-Heat, atau Ready-to-Cook sesuai kebutuhanmu.",
     "promo.aria": "Promo pelanggan baru",
     "promo.badge": "PROMO PELANGGAN BARU",
